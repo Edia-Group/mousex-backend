@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, status
-import schemas
+from users.users_schemas import UserCreate
 import models
 from security import oauth2_scheme
 from sqlalchemy.orm import Session
@@ -15,7 +15,7 @@ auth_router = APIRouter(
     )
 
 @auth_router.post("/register")
-async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(models.User.username == user.username).first()
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
@@ -28,7 +28,7 @@ async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db))
     return {"access_token": access_token, "token_type": "bearer"}
 
 @auth_router.post("/login")
-async def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(models.User.username == user.username).first()
     if not existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username not in DB")

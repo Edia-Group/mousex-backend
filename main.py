@@ -3,6 +3,7 @@ from database import create_database
 from fastapi.middleware.cors import CORSMiddleware
 from autentication.auth_endpoints import auth_router
 from users.users_endpoint import users_router
+from testgroups.testsgrops_endpoints import testgroup_router 
 
 app = FastAPI()
 
@@ -27,11 +28,13 @@ app = FastAPI(
     ]
 )
 
+"""
 @app.on_event("startup")
 def on_startup():
     create_database()
 # TODO : CHANGE WITH ALEMBIC
-
+# """
 
 app.include_router(users_router)
 app.include_router(auth_router)
+app.include_router(testgroup_router)
