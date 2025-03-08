@@ -1,0 +1,10 @@
+pydantic==2.10.6
+PyJWT==2.10.1
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+python-dotenv==1.0.1
