@@ -3,6 +3,9 @@ from datetime import datetime
 from typing import Optional
 from users.users_schemas import User
 
+class TestsGroupDelete(BaseModel):
+    id : int
+
 class TestsGroupBase(BaseModel):
     nr_test: int
     tipo: Optional[str]

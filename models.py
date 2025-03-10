@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from database import Base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Session
 from datetime import datetime
 
 class User(Base):
@@ -28,3 +28,65 @@ class TestsGroup(Base):
     utente_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     utente = relationship("User")
+
+    def decrement(self, db : Session):
+        self.nr_test -= 1
+        db.commit()
+        db.refresh()
+        return self
+    
+class Test(Base):
+    __tablename__ = "tests"
+
+    idTest = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    dataOraInizio = Column(DateTime(timezone=True), nullable=True)
+    tipo = Column(String(50), nullable=False, default = 'Normale')
+    inSequenza = Column(Boolean, nullable=True, default=False)
+    nrGruppo = Column(Integer, nullable=False, default = 0)
+    secondiRitardo = Column(Integer, nullable=False, default=5)
+    utente_id =  Column(Integer, ForeignKey("users.id"), nullable=False)
+    dataOraFine = Column(DateTime(timezone=True), nullable=True)
+    dataOraInserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    nrTest = Column(Integer, nullable=False, default =0)
+    malusF5 = Column(Boolean, nullable=False, default=False)
+    numeroErrori = Column(Integer, nullable=False, default=0)
+
+    def save(self, db:Session):
+        self.dataOraFine = datetime.now()
+        db.commit()
+        db.refresh(self)    
+        return self
+    
+    @staticmethod
+    def create(id : int, db : Session):
+        new_test = Test(utente_id = id)
+        db.add(new_test)
+        db.commit()
+        db.refresh(new_test)
+        return new_test
+    
+
+
+class Domanda(Base):
+    __tablename__ = "domande"
+
+    idDomanda = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    corpo = Column(String(500), nullable=False)
+    data_ora_inserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    tipo = Column(String(50), nullable=False, default='select')
+    numeroPagine = Column(Integer, nullable=True)
+    attivo = Column(Boolean, nullable=False, default=True)
+
+class Variante(Base):
+    __tablename__ = "varianti"
+
+    idVariante = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    corpo = Column(String(500), nullable=False)
+    data_ora_inserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    tipo = Column(String(50), nullable=True, default='select')
+    numeroPagine = Column(Integer, nullable=True)
+    attivo = Column(Boolean, nullable=True, default=True)
+    domanda_id = Column(Integer, ForeignKey("domande.idDomanda"), nullable=False)
+    rispostaEsatta = Column(String(500), nullable=False)
+
+    utente = relationship("Domanda")
