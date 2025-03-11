@@ -6,8 +6,6 @@ from users.users_endpoint import users_router
 from testgroups.testsgrops_endpoints import testgroup_router 
 from tests.tests_endpoint import test_router
 
-
-
 app = FastAPI(
     openapi_tags=[
         {

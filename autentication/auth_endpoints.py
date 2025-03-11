@@ -20,10 +20,7 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
     hashed_password = get_password_hash(user.password)
-    new_user = User(username=user.username, hashed_password=hashed_password)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    new_user = User.create(user.username, hashed_password, db)
     access_token = create_access_token({"sub": new_user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 

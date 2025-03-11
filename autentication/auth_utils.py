@@ -40,4 +40,4 @@ def get_username_from_token(token:str, db:Session):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
     except jwt.PyJWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    return user.username, user.id
+    return user

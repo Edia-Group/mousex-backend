@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from database import Base
 from sqlalchemy.orm import relationship, Session
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 class User(Base):
     __tablename__ = "users"
@@ -13,6 +13,18 @@ class User(Base):
     is_superuser = Column(Boolean, nullable=False, default=False)
     username = Column(String(150), unique=True, nullable=False, index=True)
     is_active = Column(Boolean, nullable=False, default=True)
+
+    @staticmethod
+    def create(username : str, password : str, db : Session):
+        new_user = User(username=username, hashed_password=password)
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        new_stella = Statistiche(utente_id=new_user.id, tipo_domanda='stelle', nr_errori=0)
+        db.add(new_stella)
+        db.commit()
+        db.refresh(new_stella)
+        return new_user
 
 class TestsGroup(Base):
     __tablename__ = "testsgroup"
@@ -52,7 +64,7 @@ class Test(Base):
     numeroErrori = Column(Integer, nullable=False, default=0)
 
     def save(self, db:Session):
-        self.dataOraFine = datetime.now()
+        self.dataOraFine = datetime.now(timezone(timedelta(hours=1)))
         db.commit()
         db.refresh(self)    
         return self
@@ -90,3 +102,17 @@ class Variante(Base):
     rispostaEsatta = Column(String(500), nullable=False)
 
     utente = relationship("Domanda")
+
+class Statistiche(Base):
+    __tablename__ = "statistiche"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tipo_domanda = Column(String(50), nullable=False)
+    nr_errori = Column(Integer, nullable=False)
+    utente_id =  Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    def retrieve_stelle(utente_id : int, db : Session):
+        return db.query(Statistiche).filter(Statistiche.utente_id == utente_id
+                                            , Statistiche.tipo_domanda == 'stelle').first().nr_errori
+
+        
