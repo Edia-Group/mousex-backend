@@ -6,16 +6,8 @@ from users.users_endpoint import users_router
 from testgroups.testsgrops_endpoints import testgroup_router 
 from tests.tests_endpoint import test_router
 
-app = FastAPI()
 
-# Allow all origins
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
-    allow_credentials=True,
-    allow_methods=["*"],  # Allows all HTTP methods
-    allow_headers=["*"],  # Allows all headers
-)
+
 app = FastAPI(
     openapi_tags=[
         {
@@ -35,6 +27,15 @@ app = FastAPI(
             "description": "Endpoints for user profile management.",
         },
     ]
+)
+
+# Allow all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all HTTP methods
+    allow_headers=["*"],  # Allows all headers
 )
 
 """
