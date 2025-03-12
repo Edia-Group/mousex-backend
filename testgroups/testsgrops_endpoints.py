@@ -41,11 +41,11 @@ def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(
     db_tests_group = db.query(TestsGroup).filter(TestsGroup.utente_id== user.id).all()
     return db_tests_group
 
-@testgroup_router.get("/decrement/{id_TestGroup}", response_model= List[TestsGroupWithUser] )
+@testgroup_router.get("/decrement/{id_TestGroup}", response_model= TestsGroupWithUser)
 def decrement_testgroup(id_TestGroup :int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
     db_tests_group = db.query(TestsGroup).filter(TestsGroup.utente_id== user.id, TestsGroup.id == id_TestGroup).first()
     if db_tests_group:
-        db_tests_group.decrement()
+        db_tests_group.decrement(db)
     return db_tests_group

@@ -44,7 +44,7 @@ class TestsGroup(Base):
     def decrement(self, db : Session):
         self.nr_test -= 1
         db.commit()
-        db.refresh()
+        db.refresh(self)
         return self
     
 class Test(Base):
