@@ -15,6 +15,7 @@ class TestBase(BaseModel):
     nrTest: int = 0
     malusF5: bool = False
     numeroErrori: int = 0
+    tempo_impiegato: float 
 
     class Config:
         from_attributes = True

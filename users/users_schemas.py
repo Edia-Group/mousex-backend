@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, SecretStr
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 class UserBase(BaseModel):
     username: str = Field(..., max_length=150, description="Username (unique)")
@@ -26,3 +26,27 @@ class User(UserBase):
 
 class UserRead(User):
     pass 
+
+class UserStats(BaseModel):
+    username: str
+    stelle: int
+    test_settimanali: int
+
+class TestSchema(BaseModel):
+    idTest: int
+    dataOraInizio: datetime | None
+    tipo: str
+    inSequenza: bool | None
+    nrGruppo: int
+    secondiRitardo: int
+    utente_id: int
+    dataOraFine: datetime | None
+    dataOraInserimento: datetime
+    nrTest: int
+    malusF5: bool
+    numeroErrori: int
+    tempo_impiegato: float
+
+class UserTests(BaseModel):
+    username: str
+    tests: List[TestSchema]

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Float
 from sqlalchemy.sql import func
 from database import Base
 from sqlalchemy.orm import relationship, Session
@@ -60,18 +60,21 @@ class Test(Base):
     dataOraFine = Column(DateTime(timezone=True), nullable=True)
     dataOraInserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     nrTest = Column(Integer, nullable=False, default =0)
+    tempo_impiegato = Column(Float, nullable=True, default =0)
     malusF5 = Column(Boolean, nullable=False, default=False)
     numeroErrori = Column(Integer, nullable=False, default=0)
 
-    def save(self, db:Session):
+    def save(self, db: Session):
         self.dataOraFine = datetime.now(timezone(timedelta(hours=1)))
+        if self.dataOraInizio:
+            self.tempo_impiegato = float((self.dataOraFine - self.dataOraInizio).total_seconds())
         db.commit()
-        db.refresh(self)    
+        db.refresh(self)
         return self
     
     @staticmethod
     def create(id : int, db : Session):
-        new_test = Test(utente_id = id)
+        new_test = Test(utente_id = id, dataOraInizio = datetime.now(timezone(timedelta(hours=1))))
         db.add(new_test)
         db.commit()
         db.refresh(new_test)
