@@ -12,7 +12,7 @@ class TestsGroupBase(BaseModel):
 class TestsGroupCreate(BaseModel):
     nr_test: int
     tipo: Optional[str] = 'standard'
-    data_ora_inizio: Optional[datetime] = datetime.now()
+    data_ora_inizio: Optional[datetime] = None
     secondi_ritardo: Optional[int] = 5
 
 class TestsGroupUpdate(TestsGroupBase):
