@@ -8,6 +8,7 @@ class TestsGroupDelete(BaseModel):
 
 class TestsGroupBase(BaseModel):
     nr_test: int
+    tipo: str
 
 class TestsGroupCreate(BaseModel):
     nr_test: int
