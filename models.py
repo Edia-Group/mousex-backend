@@ -51,13 +51,13 @@ class Test(Base):
     __tablename__ = "tests"
 
     idTest = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    dataOraInizio = Column(DateTime(timezone=True), nullable=True)
+    dataOraInizio = Column(DateTime(), nullable=True)
     tipo = Column(String(50), nullable=False, default = 'Normale')
     inSequenza = Column(Boolean, nullable=True, default=False)
     nrGruppo = Column(Integer, nullable=False, default = 0)
     secondiRitardo = Column(Integer, nullable=False, default=5)
     utente_id =  Column(Integer, ForeignKey("users.id"), nullable=False)
-    dataOraFine = Column(DateTime(timezone=True), nullable=True)
+    dataOraFine = Column(DateTime(), nullable=True)
     dataOraInserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     nrTest = Column(Integer, nullable=False, default =0)
     tempo_impiegato = Column(Float, nullable=True, default =0)
@@ -65,7 +65,7 @@ class Test(Base):
     numeroErrori = Column(Integer, nullable=False, default=0)
 
     def save(self, db: Session):
-        self.dataOraFine = datetime.now(timezone(timedelta(hours=1)))
+        self.dataOraFine = datetime.now() 
         if self.dataOraInizio:
             self.tempo_impiegato = float((self.dataOraFine - self.dataOraInizio).total_seconds())
         db.commit()
@@ -74,7 +74,7 @@ class Test(Base):
     
     @staticmethod
     def create(id : int, db : Session):
-        new_test = Test(utente_id = id, dataOraInizio = datetime.now(timezone(timedelta(hours=1))))
+        new_test = Test(utente_id = id, dataOraInizio = datetime.now() )
         db.add(new_test)
         db.commit()
         db.refresh(new_test)
