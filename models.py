@@ -87,7 +87,7 @@ class Test(Base):
     
     @staticmethod
     def create(id : int, db : Session):
-        new_test = Test(utente_id = id, dataOraInizio = datetime.now() )
+        new_test = Test(utente_id = id, dataOraInizio = datetime.now() + timedelta(seconds=15))
         db.add(new_test)
         db.commit()
         db.refresh(new_test)
