@@ -24,3 +24,4 @@ class DomandaVarianteResponse(BaseModel):
 class DomandaRisposta(BaseModel):
     domande: Dict[str, DomandaVarianteResponse]
     test_id : int
+    dataOraInizio: datetime

@@ -35,7 +35,7 @@ def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(
     user = get_username_from_token(token, db)
     new_test = Test.create(user.id, db)
     domande = get_random_domande_variante(db)
-    return {"domande":domande, "test_id" : new_test.idTest}
+    return {"domande":domande, "test_id" : new_test.idTest ,"dataOraInizio" : new_test.dataOraInizio}
 
 @test_router.get("/{idTest}", response_model=TestResponse)
 def read_tests_group(idTest: int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
