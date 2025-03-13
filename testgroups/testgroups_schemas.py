@@ -9,6 +9,7 @@ class TestsGroupDelete(BaseModel):
 class TestsGroupBase(BaseModel):
     nr_test: int
     tipo: str
+    data_ora_inserimento: datetime
 
 class TestsGroupCreate(BaseModel):
     nr_test: int

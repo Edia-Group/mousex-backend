@@ -36,13 +36,19 @@ class TestsGroup(Base):
     in_sequenza = Column(Boolean, nullable=False, default=True)
     secondi_ritardo = Column(Integer, nullable=False, default=5)
     data_ora_inizio = Column(DateTime(timezone=True), nullable=True, default=None)
-    data_ora_inserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    data_ora_inserimento = Column(DateTime(timezone=True), nullable=False, default=None)
     utente_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     utente = relationship("User")
 
     def decrement(self, db : Session):
         self.nr_test -= 1
+        db.commit()
+        db.refresh(self)
+        return self
+    
+    def create(self, db:Session):
+        db.add(self)
         db.commit()
         db.refresh(self)
         return self
@@ -63,11 +69,18 @@ class Test(Base):
     tempo_impiegato = Column(Float, nullable=True, default =0)
     malusF5 = Column(Boolean, nullable=False, default=False)
     numeroErrori = Column(Integer, nullable=False, default=0)
+    is_validate = Column(Boolean, nullable=True, default=False)
 
     def save(self, db: Session):
         self.dataOraFine = datetime.now() 
         if self.dataOraInizio:
             self.tempo_impiegato = float((self.dataOraFine - self.dataOraInizio).total_seconds())
+        db.commit()
+        db.refresh(self)
+        return self
+
+    def validate(self, db: Session):
+        self.is_validate = True
         db.commit()
         db.refresh(self)
         return self

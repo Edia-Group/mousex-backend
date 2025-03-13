@@ -7,6 +7,7 @@ from database import get_db
 from typing import List
 from autentication.auth_utils import SECRET_KEY, ALGORITHM
 from autentication.auth_utils import get_username_from_token
+from datetime import datetime
 
 testgroup_router = APIRouter(
     prefix="/testsgroup", 
@@ -18,10 +19,8 @@ testgroup_router = APIRouter(
 def create_tests_group(tests_group: TestsGroupCreate, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
 
     user = get_username_from_token(token, db)
-    db_tests_group = TestsGroup(**tests_group.model_dump(), utente_id=user.id) 
-    db.add(db_tests_group)
-    db.commit()
-    db.refresh(db_tests_group)
+    db_tests_group = TestsGroup(**tests_group.model_dump(), utente_id=user.id, data_ora_inserimento = datetime.now()) 
+    db_tests_group.create(db)
     return db_tests_group
 
 @testgroup_router.post("/delete")

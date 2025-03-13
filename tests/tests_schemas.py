@@ -16,6 +16,7 @@ class TestBase(BaseModel):
     malusF5: bool = False
     numeroErrori: int = 0
     tempo_impiegato: float 
+    is_validate: bool 
 
     class Config:
         from_attributes = True
