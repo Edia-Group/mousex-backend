@@ -6,6 +6,9 @@ from users.users_schemas import User
 class TestsGroupDelete(BaseModel):
     id : int
 
+class TestsGroupDeleteAll(BaseModel):
+    tipo : str
+
 class TestsGroupBase(BaseModel):
     nr_test: int
     tipo: str
