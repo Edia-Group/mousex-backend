@@ -25,3 +25,8 @@ class DomandaRisposta(BaseModel):
     domande: Dict[str, DomandaVarianteResponse]
     test_id : int
     dataOraInizio: datetime
+
+class TestCreateRequest(BaseModel):
+    tipo: str
+    secondi_ritardo: int = 5
+    group_id: Optional[int] = None

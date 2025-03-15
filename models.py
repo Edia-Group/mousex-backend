@@ -3,6 +3,7 @@ from sqlalchemy.sql import func
 from database import Base
 from sqlalchemy.orm import relationship, Session
 from datetime import datetime, timezone, timedelta
+from typing import Optional
 
 class User(Base):
     __tablename__ = "users"
@@ -86,8 +87,13 @@ class Test(Base):
         return self
     
     @staticmethod
-    def create(id : int, db : Session):
-        new_test = Test(utente_id = id, dataOraInizio = datetime.now() + timedelta(seconds=15))
+    def create(id: int, db: Session, secondi_ritardo: int = 5, tipo: str = 'Normale'):
+        new_test = Test(
+            utente_id=id, 
+            secondiRitardo=secondi_ritardo,
+            tipo=tipo,
+            dataOraInizio=datetime.now() + timedelta(seconds=secondi_ritardo)
+        )
         db.add(new_test)
         db.commit()
         db.refresh(new_test)
@@ -130,5 +136,3 @@ class Statistiche(Base):
     def retrieve_stelle(utente_id : int, db : Session):
         return db.query(Statistiche).filter(Statistiche.utente_id == utente_id
                                             , Statistiche.tipo_domanda == 'stelle').first().nr_errori
-
-        
