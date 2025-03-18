@@ -26,3 +26,9 @@ class TestResponse(TestBase):
 
 class TestCreate(BaseModel):
     utente_id: int
+
+
+class TestCreateRequest(BaseModel):
+    tipo: str
+    secondi_ritardo: int = 5
+    group_id: Optional[int] = None
