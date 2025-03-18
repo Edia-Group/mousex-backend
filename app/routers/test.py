@@ -44,17 +44,15 @@ def create_test(
         
     new_test = Test.create(
         id=user.id, 
-        db=db, 
         secondi_ritardo=secondi_ritardo,
-        tipo=request_data.tipo
+        tipo=request_data.tipo,
+        db=db
     )
     
     domande = get_random_domande_variante(db)
-    return {
-        "domande": domande, 
-        "test_id": new_test.idTest, 
-        "dataOraInizio": new_test.dataOraInizio
-    }
+    return DomandaRisposta(
+        domande=domande, test_id=new_test.id_test, data_ora_inizio=new_test.data_ora_inizio
+    ) 
 
 @test_router.get("/{idTest}", response_model=TestResponse)
 def read_tests_group(idTest: int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):

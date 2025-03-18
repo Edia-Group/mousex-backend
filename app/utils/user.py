@@ -14,18 +14,4 @@ def get_random_domande_variante(db: Session):
         .all()
     )
 
-    domanda_ids = [domanda.idDomanda for domanda in domande]
-    varianti = db.query(Variante).filter(Variante.domanda_id.in_(domanda_ids)).all()
-    varianti_grouped = {}
-    for variante in varianti:
-        if variante.domanda_id not in varianti_grouped:
-            varianti_grouped[variante.domanda_id] = []
-        varianti_grouped[variante.domanda_id].append(variante)
-    result_dict = {}
-    for domanda in domande:
-        if domanda.idDomanda in varianti_grouped.keys():
-            result_dict[domanda.corpo] = {
-                "variante": random.choice(varianti_grouped[domanda.idDomanda]),
-                "tipo": domanda.tipo
-            }
-    return result_dict
+    return domande

@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
+from app.schemas.domande import PaginaCreate
 
 class TestBase(BaseModel):
     idTest: int
@@ -32,3 +33,6 @@ class TestCreateRequest(BaseModel):
     tipo: str
     secondi_ritardo: int = 5
     group_id: Optional[int] = None
+
+class TestAdminCreate(BaseModel):
+    pagine: List[PaginaCreate]

@@ -18,6 +18,10 @@ class TestsGroup(Base):
     utente = relationship("User")
 
     def decrement(self, db : Session):
+        if self.nr_test <= 1:
+            db.delete(self)
+            db.commit()
+            return self
         self.nr_test -= 1
         db.commit()
         db.refresh(self)

@@ -7,23 +7,23 @@ from sqlalchemy.sql import func
 class Test(Base):
     __tablename__ = "tests"
 
-    idTest = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    dataOraInizio = Column(DateTime(), nullable=True)
+    id_test = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    data_ora_inizio = Column(DateTime(), nullable=True)
     tipo = Column(String(50), nullable=False, default = 'Normale')
-    inSequenza = Column(Boolean, nullable=True, default=False)
-    nrGruppo = Column(Integer, nullable=False, default = 0)
-    secondiRitardo = Column(Integer, nullable=False, default=5)
+    in_sequenza = Column(Boolean, nullable=True, default=False)
+    nr_gruppo = Column(Integer, nullable=False, default = 0)
+    secondi_ritardo = Column(Integer, nullable=False, default=5)
     utente_id =  Column(Integer, ForeignKey("users.id"), nullable=False)
-    dataOraFine = Column(DateTime(), nullable=True)
-    dataOraInserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    nrTest = Column(Integer, nullable=False, default =0)
+    data_ora_fine = Column(DateTime(), nullable=True)
+    data_ora_inserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    nr_test = Column(Integer, nullable=False, default =0)
     tempo_impiegato = Column(Float, nullable=True, default =0)
-    malusF5 = Column(Boolean, nullable=False, default=False)
-    numeroErrori = Column(Integer, nullable=False, default=0)
+    malus_f5 = Column(Boolean, nullable=False, default=False)
+    numero_errori = Column(Integer, nullable=False, default=0)
     is_validate = Column(Boolean, nullable=True, default=False)
 
     def save(self, db: Session):
-        self.dataOraFine = datetime.now() 
+        self.dataOraFine = datetime.now() + timedelta(hours=1) 
         if self.dataOraInizio:
             self.tempo_impiegato = float((self.dataOraFine - self.dataOraInizio).total_seconds())
         db.commit()
@@ -37,8 +37,8 @@ class Test(Base):
         return self
     
     @staticmethod
-    def create(id : int, db : Session):
-        new_test = Test(utente_id = id, dataOraInizio = datetime.now() + timedelta(seconds=15))
+    def create(id : int, secondi_ritardo : int , tipo: str, db : Session):
+        new_test = Test(utente_id = id, data_ora_inizio = datetime.now() + timedelta(seconds=secondi_ritardo) + timedelta(hours=1) , tipo = tipo)
         db.add(new_test)
         db.commit()
         db.refresh(new_test)

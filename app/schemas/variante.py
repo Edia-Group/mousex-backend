@@ -12,3 +12,7 @@ class Variante(BaseModel):
     tipo: Optional[str]
     data_ora_inserimento: datetime
     attivo: Optional[bool]
+
+class VarianteCreate(BaseModel):
+    corpo: str
+    rispostaEsatta: str

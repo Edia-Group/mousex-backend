@@ -1,3 +1,1 @@
 Generic single-database configuration.
-
-uvicorn main:app --reload
