@@ -1,13 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.models.test import Test
-from app.core.security import oauth2_scheme
+from models import Test
+from security import oauth2_scheme
 from sqlalchemy.orm import Session
-from app.core.database import get_db
-from app.utils.auth import get_username_from_token
-from app.schemas.test import TestResponse
-from app.utils.user import get_random_domande_variante
-from app.schemas.domande import DomandaRisposta
-
+from database import get_db
+from autentication.auth_utils import get_username_from_token
+from tests.tests_schemas import TestResponse
+from tests.tests_util import get_random_domande_variante
+from schemas import DomandaRisposta
 test_router = APIRouter(
     prefix="/test", 
     tags=["Test"],   
@@ -30,12 +29,30 @@ def read_tests_group(id_test: int, token: str = Depends(oauth2_scheme), db: Sess
     test.validate(db)
     return test
 
-@test_router.get("/create", response_model=DomandaRisposta)
-def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+@test_router.post("/create", response_model=DomandaRisposta)
+def create_test(
+    request_data: TestCreateRequest,
+    token: str = Depends(oauth2_scheme), 
+    db: Session = Depends(get_db)
+):
     user = get_username_from_token(token, db)
-    new_test = Test.create(user.id, db)
+    
+    # Get seconds delay either from request
+    secondi_ritardo = request_data.secondi_ritardo
+        
+    new_test = Test.create(
+        id=user.id, 
+        db=db, 
+        secondi_ritardo=secondi_ritardo,
+        tipo=request_data.tipo
+    )
+    
     domande = get_random_domande_variante(db)
-    return {"domande":domande, "test_id" : new_test.idTest ,"dataOraInizio" : new_test.dataOraInizio}
+    return {
+        "domande": domande, 
+        "test_id": new_test.idTest, 
+        "dataOraInizio": new_test.dataOraInizio
+    }
 
 @test_router.get("/{idTest}", response_model=TestResponse)
 def read_tests_group(idTest: int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):

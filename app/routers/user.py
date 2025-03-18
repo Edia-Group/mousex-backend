@@ -35,9 +35,11 @@ async def read_user_stats(token: str = Depends(oauth2_scheme), db: Session = Dep
         func.date(Test.dataOraFine) <= end_of_week,
     ).scalar() or 0
 
+    stelle_count = stella_stats.nr_errori if stella_stats else 0
+
     return UserStats(
         username=user.username,
-        stelle=stella_stats.nr_errori,
+        stelle=stelle_count,
         test_settimanali=test_count,
     )
 

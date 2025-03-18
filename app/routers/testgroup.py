@@ -32,6 +32,18 @@ def delete_tests_group(tests_group: TestsGroupDelete, db: Session = Depends(get_
         db.commit()
     return db_tests_group
 
+
+@testgroup_router.post("/delete_all")
+def delete_all_tests_group(tests_group: TestsGroupDeleteAll, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+    user = get_username_from_token(token, db)
+    deleted_count = db.query(TestsGroup).filter(
+        TestsGroup.utente_id == user.id, 
+        TestsGroup.tipo==tests_group.tipo
+    ).delete(synchronize_session=False)
+    
+    db.commit()
+    return {"deleted_count": deleted_count}
+
 @testgroup_router.get("/all", response_model= List[TestsGroupWithUser] )
 def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
