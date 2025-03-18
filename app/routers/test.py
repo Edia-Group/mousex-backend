@@ -1,18 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from models import Test
-from security import oauth2_scheme
+from app.models.test import Test
+from app.core.security import oauth2_scheme
 from sqlalchemy.orm import Session
-from database import get_db
-from autentication.auth_utils import get_username_from_token
-from tests.tests_schemas import TestResponse
-from tests.tests_util import get_random_domande_variante
-from schemas import DomandaRisposta
+from app.core.database import get_db
+from app.utils.auth import get_username_from_token
+from app.schemas.test import TestResponse
+from app.utils.user import get_random_domande_variante
+from app.schemas.domande import DomandaRisposta
+
 test_router = APIRouter(
     prefix="/test", 
     tags=["Test"],   
     responses={404: {"description": "Not found"}},
     )
-
 
 @test_router.get("/save/{id_test}", response_model=TestResponse)
 def read_tests_group(id_test: int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):

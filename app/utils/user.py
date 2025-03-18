@@ -1,8 +1,8 @@
-
 from sqlalchemy.orm import Session
 from sqlalchemy import func as sqlfunc
-from models import Domanda, Variante
+from app.models.variante import Variante
 import random
+from app.models.domanda import Domanda
 
 def get_random_domande_variante(db: Session):
 

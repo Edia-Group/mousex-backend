@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime, timezone, timedelta
 from typing import Optional
-from users.users_schemas import User
+from .user import User
 
 class TestsGroupDelete(BaseModel):
     id : int

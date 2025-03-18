@@ -7,3 +7,4 @@ SQLAlchemy==2.0.38
 uvicorn
 psycopg2-binary
 python-multipart
+pydantic-settings

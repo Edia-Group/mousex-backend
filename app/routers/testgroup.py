@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Depends
-from testgroups.testgroups_schemas import TestsGroupWithUser, TestsGroupCreate, TestsGroupDelete
-from models import TestsGroup
-from security import oauth2_scheme
+from app.schemas.testgroup import TestsGroupWithUser, TestsGroupCreate, TestsGroupDelete
+from app.models.testgroup import TestsGroup
+from app.core.security import oauth2_scheme
 from sqlalchemy.orm import Session
-from database import get_db
+from app.core.database import get_db
 from typing import List
-from autentication.auth_utils import SECRET_KEY, ALGORITHM
-from autentication.auth_utils import get_username_from_token
+from app.utils.auth import get_username_from_token
 from datetime import datetime
 
 testgroup_router = APIRouter(

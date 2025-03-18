@@ -1,12 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends, status
-from users.users_schemas import UserCreate
-import models
-from security import oauth2_scheme
+from app.schemas.auth import UserCreate
 from sqlalchemy.orm import Session
-from database import get_db
+from app.core.database import get_db
 from fastapi.security import OAuth2PasswordRequestForm
-from autentication.auth_utils import get_password_hash, create_access_token, verify_password
-from models import User
+from app.utils.auth import get_password_hash, create_access_token, verify_password
+from app.models.user import User
 
 auth_router = APIRouter(
     prefix="/auth", 
@@ -16,7 +14,7 @@ auth_router = APIRouter(
 
 @auth_router.post("/register")
 async def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(models.User.username == user.username).first()
+    existing_user = db.query(User).filter(User.username == user.username).first()
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
     hashed_password = get_password_hash(user.password)
@@ -26,7 +24,7 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
 
 @auth_router.post("/login")
 async def register_user(user: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(models.User.username == user.username).first()
+    existing_user = db.query(User).filter(User.username == user.username).first()
     if not existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username not in DB")
     if not verify_password(user.password, existing_user.hashed_password):

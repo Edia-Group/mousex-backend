@@ -1,10 +1,9 @@
 from fastapi import FastAPI
-from database import create_database
 from fastapi.middleware.cors import CORSMiddleware
-from autentication.auth_endpoints import auth_router
-from users.users_endpoint import users_router
-from testgroups.testsgrops_endpoints import testgroup_router 
-from tests.tests_endpoint import test_router
+from app.routers.auth import auth_router
+from app.routers.user import users_router
+from app.routers.testgroup import testgroup_router 
+from app.routers.test import test_router
 
 app = FastAPI(
     openapi_tags=[

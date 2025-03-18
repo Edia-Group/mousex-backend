@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends
-from security import oauth2_scheme
+from app.core.security import oauth2_scheme
 from sqlalchemy.orm import Session
-from database import get_db
+from app.core.database import get_db
 from sqlalchemy import func, extract, desc
-from autentication.auth_utils import get_username_from_token
+from app.utils.auth import get_username_from_token
 from datetime import datetime, timedelta
-from users.users_schemas import UserStats, UserTests, TestSchema
-from models import Statistiche, Test
+from app.schemas.user import UserStats, UserTests, TestSchema
+from app.models.statistiche import Statistiche
+from app.models.test import Test
 
 users_router = APIRouter(
     prefix="/users", 
