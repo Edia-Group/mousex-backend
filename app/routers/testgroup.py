@@ -7,6 +7,7 @@ from app.core.database import get_db
 from typing import List
 from app.utils.auth import get_username_from_token
 from datetime import datetime
+from app.schemas.testgroup import TestsGroupDeleteAll
 
 testgroup_router = APIRouter(
     prefix="/testsgroup", 
