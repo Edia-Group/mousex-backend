@@ -1,7 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from datetime import datetime
 from typing import Optional, List
-from app.schemas.domande import PaginaCreate
 
 class TestBase(BaseModel):
     idTest: int
@@ -34,5 +33,18 @@ class TestCreateRequest(BaseModel):
     secondi_ritardo: int = 5
     group_id: Optional[int] = None
 
-class TestAdminCreate(BaseModel):
-    pagine: List[PaginaCreate]
+from pydantic import BaseModel
+from typing import List, Literal, Dict
+
+class Domanda(BaseModel):
+    corpo: str
+    opzioni: List[str]
+    risposta_esatta: str
+    tipo: Literal["m", "t"]
+
+class Pagina(BaseModel):
+    domanda: List[Domanda]
+
+class DomandePagine(BaseModel):
+    pagine: List[Pagina]
+    

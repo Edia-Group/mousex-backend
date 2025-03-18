@@ -43,3 +43,18 @@ class DomandaRisposta(BaseModel):
 class PaginaCreate(BaseModel):
     domande: List[DomandaCreate]
 
+from pydantic import BaseModel
+from typing import List, Literal
+
+class Variante(BaseModel):
+    variante_corpo: str
+    variante_risposta_corretta: str
+
+class Domanda(BaseModel):
+    corpo: str
+    varianti: List[Variante]
+    tipo: Literal["m", "t"]
+
+class DomandeList(BaseModel):
+    domande: List[Domanda]
+

@@ -7,7 +7,7 @@ from app.utils.auth import get_username_from_token
 from app.schemas.test import TestResponse
 from app.utils.user import get_random_domande_variante
 from app.schemas.domande import DomandaRisposta
-from app.schemas.test import TestCreateRequest
+from app.schemas.test import TestCreateRequest, DomandePagine
 
 test_router = APIRouter(
     prefix="/test", 
@@ -59,3 +59,8 @@ def read_tests_group(idTest: int, token: str = Depends(oauth2_scheme), db: Sessi
     user = get_username_from_token(token, db)
 
     return db.query(Test).filter(Test.idTest == idTest, Test.utente_id == user.id).first()
+
+@test_router.post("/admin-test")
+async def create_domande(domande: DomandePagine):
+    print(domande.model_dump())
+    return {"pagine" : domande.__dict__}

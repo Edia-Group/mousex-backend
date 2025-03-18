@@ -8,9 +8,7 @@ from typing import List
 from app.utils.auth import get_username_from_token
 from datetime import datetime
 from app.schemas.testgroup import TestsGroupDeleteAll
-from app.models.domanda import Domanda
-from app.models.variante import Variante
-from app.schemas.test import TestAdminCreate
+
 
 testgroup_router = APIRouter(
     prefix="/testsgroup", 
@@ -64,32 +62,3 @@ def decrement_testgroup(id_TestGroup :int, token: str = Depends(oauth2_scheme), 
         db_tests_group.decrement(db)
     return db_tests_group
 
-@testgroup_router.post("/admin-creation")
-def create_test(test: TestAdminCreate, db: Session = Depends(get_db)):
-    try:
-        for pagina in test.pagine:
-            for domanda_data in pagina.domande:
-                domanda = Domanda(corpo=domanda_data.corpo)
-                db.add(domanda)
-                db.flush() 
-                db.refresh(domanda)
-
-                variante_corretta = Variante(
-                    corpo=domanda_data.risposta_corretta,
-                    domanda_id=domanda.idDomanda,
-                    rispostaEsatta=domanda_data.risposta_corretta
-                )
-                db.add(variante_corretta)
-
-                for opzione in domanda_data.altre_opzioni:
-                    variante_opzione = Variante(
-                        corpo=opzione,
-                        domanda_id=domanda.idDomanda,
-                        rispostaEsatta=domanda_data.risposta_corretta
-                    )
-                    db.add(variante_opzione)
-        db.commit()
-        return {"message": "Test created successfully"}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
