@@ -29,10 +29,10 @@ async def read_user_stats(token: str = Depends(oauth2_scheme), db: Session = Dep
     end_of_week = start_of_week + timedelta(days=6)
     stella_stats = db.query(Statistiche).filter(Statistiche.utente_id == user.id, Statistiche.tipo_domanda == 'stelle').first()
 
-    test_count = db.query(func.count(Test.idTest)).filter(
+    test_count = db.query(func.count(Test.id_test)).filter(
         Test.utente_id == user.id,
-        func.date(Test.dataOraFine) >= start_of_week,
-        func.date(Test.dataOraFine) <= end_of_week,
+        func.date(Test.data_ora_fine) >= start_of_week,
+        func.date(Test.data_ora_fine) <= end_of_week,
     ).scalar() or 0
 
     stelle_count = stella_stats.nr_errori if stella_stats else 0
@@ -47,21 +47,21 @@ async def read_user_stats(token: str = Depends(oauth2_scheme), db: Session = Dep
 async def get_last_tests(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     user = get_username_from_token(token, db)
 
-    last_tests = db.query(Test).filter(Test.utente_id == user.id, Test.tempo_impiegato > 0).order_by(desc(Test.dataOraInserimento)).limit(100).all()
+    last_tests = db.query(Test).filter(Test.utente_id == user.id, Test.tempo_impiegato > 0).order_by(desc(Test.data_ora_inserimento)).limit(100).all()
 
     test_schemas = [TestSchema(
         idTest=test.idTest,
-        dataOraInizio=test.dataOraInizio,
+        dataOraInizio=test.data_ora_inizio,
         tipo=test.tipo,
-        inSequenza=test.inSequenza,
-        nrGruppo=test.nrGruppo,
-        secondiRitardo=test.secondiRitardo,
+        inSequenza=test.in_sequenza,
+        nrGruppo=test.nr_gruppo,
+        secondiRitardo=test.secondi_ritardo,
         utente_id=test.utente_id,
-        dataOraFine=test.dataOraFine,
-        dataOraInserimento=test.dataOraInserimento,
-        nrTest=test.nrTest,
-        malusF5=test.malusF5,
-        numeroErrori=test.numeroErrori,
+        dataOraFine=test.data_ora_fine,
+        dataOraInserimento=test.data_ora_inserimento,
+        nrTest=test.nr_test,
+        malusF5=test.malus_f5,
+        numeroErrori=test.numero_errori,
         tempo_impiegato = test.tempo_impiegato
     ) for test in last_tests]
 
