@@ -47,9 +47,15 @@ class DomandaVarianteResponse(BaseModel):
     variante: VarianteQuestion
     tipo: str
 
+class DomandaOptions(BaseModel):
+    domanda : DomandaResponse
+    varianti : List[str]
+
 class DomandaRisposta(BaseModel):
-    domande: List[DomandaResponse]
+    domande: List[DomandaOptions]
     test_id : int
     data_ora_inizio: datetime
+
+
 
 

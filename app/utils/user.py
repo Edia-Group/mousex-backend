@@ -1,6 +1,5 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func as sqlfunc
-from app.models.variante import Variante
 import random
 from app.models.domanda import Domanda
 

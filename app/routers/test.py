@@ -6,14 +6,14 @@ from app.core.database import get_db
 from app.utils.auth import get_username_from_token
 from app.schemas.test import TestResponse
 from app.utils.user import get_random_domande_variante
-from app.schemas.domande import DomandaRisposta
+from app.schemas.domande import DomandaRisposta, DomandaOptions
 from app.schemas.test import TestCreateRequest, FormattedTest
 from app.models.domanda import Domanda
 from app.models.variante import Variante
 from app.models.testAdmin import TestAdmin
 from app.models.test import Test
 from sqlalchemy import text
-
+from app.utils.test import generate_distinct_variations
 
 test_router = APIRouter(
     prefix="/test", 
@@ -54,10 +54,19 @@ def create_test(
         tipo=request_data.tipo,
         db=db
     )
-    
+    domande_with_options = []
     domande = get_random_domande_variante(db)
+    for domanda in domande:
+        opzioni = generate_distinct_variations(domanda.risposta_esatta)
+        print(opzioni)
+        domande_with_options.append(
+            DomandaOptions(
+                domanda=domanda,
+                varianti=opzioni
+            )
+        )
     return DomandaRisposta(
-        domande=domande, test_id=new_test.id_test, data_ora_inizio=new_test.data_ora_inizio
+        domande=domande_with_options, test_id=new_test.id_test, data_ora_inizio=new_test.data_ora_inizio
     ) 
 
 @test_router.get("/{idTest}", response_model=TestResponse)
