@@ -1,16 +1,29 @@
-from .variante import Variante
+from .variante import VarianteQuestion
 from typing import List, Dict
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
-class DomandaCreate(BaseModel):
+class Opzione(BaseModel):
     corpo: str
-    tipo: Optional[str] = 'select'
-    numero_pagina: Optional[int] = None
-    attivo: Optional[bool] = True
-    risposta_esatta: str
 
+class Domanda(BaseModel):
+    corpo: str
+    opzioni: List[str]
+    risposta_esatta: str
+    tipo: str
+
+class Pagina(BaseModel):
+    domanda: List[Domanda]
+
+class FormattedQuestion(BaseModel):
+    corpo: str
+    varianti: List[VarianteQuestion]
+    tipo: str
+
+class FormattedQuestions(BaseModel):
+    formattedQuestions: List[FormattedQuestion]
+    
 class DomandaUpdate(BaseModel):
     corpo: Optional[str] = None
     tipo: Optional[str] = None
@@ -31,7 +44,7 @@ class DomandaResponse(BaseModel):
         from_attributes = True
 
 class DomandaVarianteResponse(BaseModel):
-    variante: Variante
+    variante: VarianteQuestion
     tipo: str
 
 class DomandaRisposta(BaseModel):
@@ -39,22 +52,4 @@ class DomandaRisposta(BaseModel):
     test_id : int
     data_ora_inizio: datetime
 
-
-class PaginaCreate(BaseModel):
-    domande: List[DomandaCreate]
-
-from pydantic import BaseModel
-from typing import List, Literal
-
-class Variante(BaseModel):
-    variante_corpo: str
-    variante_risposta_corretta: str
-
-class Domanda(BaseModel):
-    corpo: str
-    varianti: List[Variante]
-    tipo: Literal["m", "t"]
-
-class DomandeList(BaseModel):
-    domande: List[Domanda]
 

@@ -7,7 +7,13 @@ from app.utils.auth import get_username_from_token
 from app.schemas.test import TestResponse
 from app.utils.user import get_random_domande_variante
 from app.schemas.domande import DomandaRisposta
-from app.schemas.test import TestCreateRequest, DomandePagine
+from app.schemas.test import TestCreateRequest, FormattedTest
+from app.models.domanda import Domanda
+from app.models.variante import Variante
+from app.models.testAdmin import TestAdmin
+from app.models.test import Test
+from sqlalchemy import text
+
 
 test_router = APIRouter(
     prefix="/test", 
@@ -61,6 +67,89 @@ def read_tests_group(idTest: int, token: str = Depends(oauth2_scheme), db: Sessi
     return db.query(Test).filter(Test.idTest == idTest, Test.utente_id == user.id).first()
 
 @test_router.post("/admin-test")
-async def create_domande(domande: DomandePagine):
-    print(domande.model_dump())
-    return {"pagine" : domande.__dict__}
+async def create_domande(FormattedTest: FormattedTest, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    try:
+        user = get_username_from_token(token, db)
+
+        domanda_varianti_map = {}
+        domande_data = []
+
+        for pagine_number, pagina in FormattedTest.formattedTest.items():
+            for domanda in pagina.domanda:
+                new_domanda = Domanda(
+                    corpo=domanda.corpo,
+                    risposta_esatta=domanda.risposta_esatta,
+                    tipo=domanda.tipo,
+                    numero_pagina=int(pagine_number.strip("pagina"))
+                )
+                domande_data.append(new_domanda)
+
+                varianti_data = []
+                for i, variante in enumerate(domanda.opzioni):
+                    new_variante = Variante(
+                        corpo=variante,
+                        tipo=domanda.tipo,
+                        numero_pagina=int(pagine_number.strip("pagina")),
+                        posizione=i
+                    )
+                    varianti_data.append(new_variante)
+
+                domanda_varianti_map[new_domanda] = varianti_data
+
+        # Manual INSERTs with returning clause
+        inserted_ids = []
+        for domanda in domande_data:
+            insert_stmt = text(
+                "INSERT INTO domande (corpo, risposta_esatta, tipo, numero_pagina, attivo) "
+                "VALUES (:corpo, :risposta_esatta, :tipo, :numero_pagina, :attivo) "
+                "RETURNING id_domanda"
+            )
+            result = db.execute(
+                insert_stmt,
+                {
+                    "corpo": domanda.corpo,
+                    "risposta_esatta": domanda.risposta_esatta,
+                    "tipo": domanda.tipo,
+                    "numero_pagina": domanda.numero_pagina,
+                    "attivo": True,
+                },
+            )
+            inserted_ids.append(result.scalar())
+
+        # Update Domanda objects with generated IDs
+        for i, domanda in enumerate(domande_data):
+            domanda.id_domanda = inserted_ids[i]
+
+        # Rest of your code (Varianti, Test, TestAdmin)
+        varianti_to_insert = []
+        for domanda, varianti in domanda_varianti_map.items():
+            for variante in varianti:
+                variante.domanda_id = domanda.id_domanda
+                varianti_to_insert.append(variante)
+
+        db.bulk_save_objects(varianti_to_insert)
+        db.commit()
+
+        new_test = Test.create(
+            id=user.id,
+            secondi_ritardo=5,
+            tipo='prefatto',
+            db=db
+        )
+
+        test_admin_data = [
+            TestAdmin(
+                id_test=new_test.id_test,
+                id_domanda=domanda_id
+            )
+            for domanda_id in inserted_ids
+        ]
+
+        db.bulk_save_objects(test_admin_data)
+        db.commit()
+
+        return FormattedTest
+    except Exception as e:
+        print(e)
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Internal server error")
