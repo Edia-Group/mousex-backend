@@ -44,3 +44,39 @@ def create_test(
     user = get_username_from_token(token, db)
 
     return db.query(DomandaModel).all()
+
+@domande_router.put("/modify/{id_domanda}", response_model=DomandaResponse)
+def modify_domanda(
+    id_domanda: int,
+    new_domanda: Domanda,
+    token: str = Depends(oauth2_scheme), 
+    db: Session = Depends(get_db)
+):        
+    user = get_username_from_token(token, db)
+    domanda = db.query(DomandaModel).filter(DomandaModel.id == id_domanda).first()
+    
+    if not domanda:
+        return {"error": "Domanda not found"}
+    
+    for key, value in new_domanda.model_dump().items():
+        setattr(domanda, key, value)
+    
+    db.commit()
+    db.refresh(domanda)
+    return domanda
+
+@domande_router.delete("/delete/{id_domanda}")
+def delete_domanda(
+    id_domanda: int,
+    token: str = Depends(oauth2_scheme), 
+    db: Session = Depends(get_db)
+):        
+    user = get_username_from_token(token, db)
+    domanda = db.query(DomandaModel).filter(DomandaModel.id == id_domanda).first()
+    
+    if not domanda:
+        return {"error": "Domanda not found"}
+    
+    db.delete(domanda)
+    db.commit()
+    return {"message": "Domanda deleted"}

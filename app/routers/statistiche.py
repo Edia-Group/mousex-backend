@@ -91,7 +91,7 @@ def create_test(
     tests = db.query(Test).all()
     return [TestBaseStats(Test=test, utente=user) for user in users for test in tests if test.utente_id == user.id]
 
-@statistiche_router.get("/csv_riepilogo", response_model=List[TestBaseStats])
+@statistiche_router.get("/csv_riepilogo_collettivi", response_model=List[TestBaseStats])
 def create_test(
     token: str = Depends(oauth2_scheme), 
     db: Session = Depends(get_db)
