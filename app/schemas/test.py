@@ -4,18 +4,18 @@ from typing import Optional, Dict
 from app.schemas.domande import Pagina
 
 class TestBase(BaseModel):
-    idTest: int
-    dataOraInizio: Optional[datetime] = None
+    id_test: int
+    data_ora_inizio: Optional[datetime] = None
     tipo: str = 'Normale'
-    inSequenza: bool = False
-    nrGruppo: int = 0
-    secondiRitardo: int = 5
+    in_sequenza: bool = False
+    nr_gruppo: int = 0
+    secondi_ritardo: int = 5
     utente_id: int
-    dataOraFine: Optional[datetime] = None
-    dataOraInserimento: datetime
-    nrTest: int = 0
-    malusF5: bool = False
-    numeroErrori: int = 0
+    data_ora_fine: Optional[datetime] = None
+    data_ora_inserimento: datetime
+    nr_test: int = 0
+    malus_f5: bool = False
+    numero_errori: int = 0
     tempo_impiegato: float 
     is_validate: bool 
 
@@ -36,3 +36,4 @@ class TestCreateRequest(BaseModel):
 
 class FormattedTest(BaseModel):
     formattedTest: Dict[str, Pagina]
+    data_ora_inizio: Optional[datetime] = None

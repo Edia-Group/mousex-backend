@@ -22,16 +22,11 @@ class Test(Base):
     numero_errori = Column(Integer, nullable=False, default=0)
     is_validate = Column(Boolean, nullable=True, default=False)
 
-    def save(self, db: Session):
-        self.dataOraFine = datetime.now() + timedelta(hours=1) 
-        if self.dataOraInizio:
-            self.tempo_impiegato = float((self.dataOraFine - self.dataOraInizio).total_seconds())
-        db.commit()
-        db.refresh(self)
-        return self
 
     def validate(self, db: Session):
         self.is_validate = True
+        if self.data_ora_inizio:
+            self.tempo_impiegato = float((self.data_ora_fine - self.data_ora_inizio).total_seconds())
         db.commit()
         db.refresh(self)
         return self

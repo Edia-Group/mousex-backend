@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends
-from app.models.domanda import Domanda
+from app.models.domanda import Domanda as DomandaModel
+from app.schemas.domande import DomandaResponse, Domanda
 from app.core.security import oauth2_scheme
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.schemas.domande import FormattedQuestions
 from app.utils.auth import get_username_from_token
+from typing import List
 
 domande_router = APIRouter(
     prefix="/domande", 
@@ -33,3 +35,12 @@ def create_test(
     db.commit()
 
     return request_data
+
+@domande_router.get("/all", response_model=List[DomandaResponse])
+def create_test(
+    token: str = Depends(oauth2_scheme), 
+    db: Session = Depends(get_db)
+):        
+    user = get_username_from_token(token, db)
+
+    return db.query(DomandaModel).all()

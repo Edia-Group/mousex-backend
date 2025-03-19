@@ -21,19 +21,10 @@ test_router = APIRouter(
     responses={404: {"description": "Not found"}},
     )
 
-@test_router.get("/save/{id_test}", response_model=TestResponse)
-def read_tests_group(id_test: int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    user = get_username_from_token(token, db)
-    test = db.query(Test).filter(Test.idTest == id_test, Test.utente_id == user.id).first()
-    if not test.is_validate:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Test not validate")
-    test.save(db)
-    return test
-
 @test_router.get("/validate/{id_test}", response_model=TestResponse)
 def read_tests_group(id_test: int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     user = get_username_from_token(token, db)
-    test = db.query(Test).filter(Test.idTest == id_test, Test.utente_id == user.id).first()
+    test = db.query(Test).filter(Test.id_test == id_test, Test.utente_id == user.id).first()
     test.validate(db)
     return test
 
@@ -142,10 +133,10 @@ async def create_domande(FormattedTest: FormattedTest, token: str = Depends(oaut
         new_test = Test.create(
             id=user.id,
             secondi_ritardo=5,
-            tipo='prefatto',
+            tipo='collettivo' if FormattedTest.data_ora_inizio else 'prefatto',
             db=db
         )
-
+        
         test_admin_data = [
             TestAdmin(
                 id_test=new_test.id_test,

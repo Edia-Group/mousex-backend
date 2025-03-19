@@ -5,6 +5,7 @@ from app.routers.user import users_router
 from app.routers.testgroup import testgroup_router 
 from app.routers.test import test_router
 from app.routers.domande import domande_router
+from app.routers.statistiche import statistiche_router
 
 app = FastAPI(
     openapi_tags=[
@@ -24,9 +25,13 @@ app = FastAPI(
             "name": "TestsGroup",
             "description": "Endpoints for user profile management.",
         },
-                {
+        {
             "name": "Domande",
             "description": "Endpoints for user Domande management.",
+        },
+        {
+            "name": "Statistiche",
+            "description": "Endpoints for user Stelle management.",
         },
     ]
 )
@@ -50,5 +55,6 @@ def on_startup():
 app.include_router(users_router)
 app.include_router(domande_router)
 app.include_router(auth_router)
+app.include_router(statistiche_router)
 app.include_router(testgroup_router)
 app.include_router(test_router)
