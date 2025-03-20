@@ -7,6 +7,8 @@ from app.core.database import get_db
 from app.schemas.domande import FormattedQuestions
 from app.utils.auth import get_username_from_token
 from typing import List
+from app.models.variante import Variante
+from app.models.testAdmin import TestAdmin
 
 domande_router = APIRouter(
     prefix="/domande", 
@@ -48,12 +50,12 @@ def create_test(
 @domande_router.put("/modify/{id_domanda}", response_model=DomandaResponse)
 def modify_domanda(
     id_domanda: int,
-    new_domanda: Domanda,
+    new_domanda: DomandaResponse,
     token: str = Depends(oauth2_scheme), 
     db: Session = Depends(get_db)
 ):        
     user = get_username_from_token(token, db)
-    domanda = db.query(DomandaModel).filter(DomandaModel.id == id_domanda).first()
+    domanda = db.query(DomandaModel).filter(DomandaModel.id_domanda == id_domanda).first()
     
     if not domanda:
         return {"error": "Domanda not found"}
@@ -72,11 +74,12 @@ def delete_domanda(
     db: Session = Depends(get_db)
 ):        
     user = get_username_from_token(token, db)
-    domanda = db.query(DomandaModel).filter(DomandaModel.id == id_domanda).first()
-    
+    domanda = db.query(DomandaModel).filter(DomandaModel.id_domanda == id_domanda).first()
     if not domanda:
         return {"error": "Domanda not found"}
     
+    db.query(Variante).filter(Variante.domanda_id == id_domanda).delete(synchronize_session=False)
+    db.query(TestAdmin).filter(TestAdmin.id_domanda == id_domanda).delete(synchronize_session=False)
     db.delete(domanda)
     db.commit()
-    return {"message": "Domanda deleted"}
+    return {"message": "Domanda and its varianti deleted"}

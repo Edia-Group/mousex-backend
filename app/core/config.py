@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv('DATABASE_URL')
     SECRET_KEY: str = "inserire_chiave_segreta_sicura"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 400
     OTP_EXPIRATION_SECONDS: int = 300
 
     class Config:
