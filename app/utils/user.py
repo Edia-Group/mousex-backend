@@ -5,12 +5,21 @@ from app.models.domanda import Domanda
 
 def get_random_domande_variante(db: Session):
 
-    rand_limit_domande = random.randint(13,18)
     domande = (
         db.query(Domanda)
         .order_by(sqlfunc.random())
-        .limit(rand_limit_domande)
+        .limit(100)
         .all()
     )
 
-    return domande
+    return get_unique_domande(domande)
+
+def get_unique_domande(domande : list[Domanda]):
+    rand_limit_domande = random.randint(12,15)
+    domande_body = []
+    domande_unique = []
+    for domanda in domande:
+        if domanda.corpo not in domande_body:
+            domande_body.append(domanda.corpo)
+            domande_unique.append(domanda)
+    return domande_unique[:rand_limit_domande]

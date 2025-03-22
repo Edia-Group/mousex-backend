@@ -38,7 +38,6 @@ def create_test(
 ):
     user = get_username_from_token(token, db)
     
-    # Get seconds delay either from request
     secondi_ritardo = request_data.secondi_ritardo
         
     new_test = Test.create(
@@ -47,18 +46,18 @@ def create_test(
         tipo=request_data.tipo,
         db=db
     )
-    
+
     domande_with_options = []
     domande = get_random_domande_variante(db)
     for domanda in domande:
         opzioni = generate_distinct_variations(domanda.risposta_esatta)
-        print(opzioni)
         domande_with_options.append(
             DomandaOptions(
                 domanda=domanda,
                 varianti=opzioni
             )
         )
+    print(len(domande_with_options))
     return DomandaRisposta(
         domande=domande_with_options, test_id=new_test.id_test, data_ora_inizio=new_test.data_ora_inizio
     ) 
