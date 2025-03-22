@@ -25,6 +25,8 @@ test_router = APIRouter(
 def read_tests_group(id_test: int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     user = get_username_from_token(token, db)
     test = db.query(Test).filter(Test.id_test == id_test, Test.utente_id == user.id).first()
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
     test.validate(db)
     return test
 
@@ -45,6 +47,7 @@ def create_test(
         tipo=request_data.tipo,
         db=db
     )
+    
     domande_with_options = []
     domande = get_random_domande_variante(db)
     for domanda in domande:
