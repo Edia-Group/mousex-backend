@@ -9,9 +9,10 @@ class Opzione(BaseModel):
 
 class Domanda(BaseModel):
     corpo: str
-    opzioni: List[str]
     risposta_esatta: str
     tipo: str
+    class Config:
+        from_attributes = True
 
 class Pagina(BaseModel):
     domanda: List[Domanda]
@@ -22,7 +23,7 @@ class FormattedQuestion(BaseModel):
     tipo: str
 
 class FormattedQuestions(BaseModel):
-    formattedQuestions: List[FormattedQuestion]
+    formattedQuestions: FormattedQuestion
     
 class DomandaUpdate(BaseModel):
     corpo: Optional[str] = None

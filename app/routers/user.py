@@ -50,7 +50,7 @@ async def get_last_tests(token: str = Depends(oauth2_scheme), db: Session = Depe
     last_tests = db.query(Test).filter(Test.utente_id == user.id, Test.tempo_impiegato > 0).order_by(desc(Test.data_ora_inserimento)).limit(100).all()
 
     test_schemas = [TestSchema(
-        idTest=test.idTest,
+        idTest=test.id_test,
         dataOraInizio=test.data_ora_inizio,
         tipo=test.tipo,
         inSequenza=test.in_sequenza,

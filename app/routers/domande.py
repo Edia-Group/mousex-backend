@@ -24,14 +24,14 @@ def create_test(
     db: Session = Depends(get_db)
 ):        
     user = get_username_from_token(token, db)
+    base_question = request_data.formattedQuestions
     new_questions = [
-        Domanda(
-            corpo=formatted_question.corpo + " " + variante.variante_corpo,
-            tipo=formatted_question.tipo,
+        DomandaModel(
+            corpo=base_question.corpo + " " + variante.variante_corpo,
+            tipo=base_question.tipo,
             risposta_esatta=variante.variante_risposta_corretta,
         )
-        for formatted_question in request_data.formattedQuestions
-        for variante in formatted_question.varianti
+        for variante in base_question.varianti
     ]
     db.bulk_save_objects(new_questions)
     db.commit()
