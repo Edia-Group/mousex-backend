@@ -8,7 +8,8 @@ from typing import List
 from app.utils.auth import get_username_from_token
 from datetime import datetime
 from app.schemas.testgroup import TestsGroupDeleteAll
-
+from app.schemas.domande import DomandaRisposta
+from app.services.test import generate_test
 
 testgroup_router = APIRouter(
     prefix="/testsgroup", 
@@ -23,6 +24,22 @@ def create_tests_group(tests_group: TestsGroupCreate, db: Session = Depends(get_
     db_tests_group = TestsGroup(**tests_group.model_dump(), utente_id=user.id, data_ora_inserimento = datetime.now()) 
     db_tests_group.create(db)
     return db_tests_group
+
+@testgroup_router.get("/{id_testsgroup}/new_test", response_model=DomandaRisposta)
+def new_test(id_testsgroup: int, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+
+    user = get_username_from_token(token, db)
+    db_tests_group = db.query(TestsGroup).filter(TestsGroup.utente_id == user.id, TestsGroup.id==id_testsgroup).first()
+    if not db_tests_group:
+        raise HTTPException(status_code=404, detail="TestGroup not found")
+    db_tests_group.decrement(db)
+    """
+    if db.tests_group.tipo == "prefatto":
+    TODO ecc
+    """
+    return generate_test(db_tests_group, user, db)
+
+
 
 @testgroup_router.post("/delete")
 def delete_tests_group(tests_group: TestsGroupDelete, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
@@ -62,3 +79,11 @@ def decrement_testgroup(id_TestGroup :int, token: str = Depends(oauth2_scheme), 
         db_tests_group.decrement(db)
     return db_tests_group
 
+@testgroup_router.get("/get/{id_TestGroup}", response_model= TestsGroupWithUser)
+def decrement_testgroup(id_TestGroup :int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+    user = get_username_from_token(token, db)
+    db_tests_group = db.query(TestsGroup).filter(TestsGroup.utente_id== user.id, TestsGroup.id == id_TestGroup).first()
+    if not db_tests_group:
+        raise HTTPException(status_code=404, detail="TestGroup not found")
+    return db_tests_group

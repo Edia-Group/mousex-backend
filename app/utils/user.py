@@ -22,4 +22,11 @@ def get_unique_domande(domande : list[Domanda]):
         if domanda.corpo not in domande_body:
             domande_body.append(domanda.corpo)
             domande_unique.append(domanda)
-    return domande_unique[:rand_limit_domande]
+    return assign_page(domande_unique[:rand_limit_domande])
+
+def assign_page(domande : list[Domanda]):
+    total_page = random.randint(1, 2)
+    for index, domanda in enumerate(domande):
+        domanda.numero_pagina = index % (total_page + 1)
+    
+    return sorted(domande, key=lambda x: x.numero_pagina)

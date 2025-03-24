@@ -21,11 +21,11 @@ class TestsGroup(Base):
         if self.nr_test <= 1:
             db.delete(self)
             db.commit()
-            return self
+            return True
         self.nr_test -= 1
         db.commit()
         db.refresh(self)
-        return self
+        return False
     
     def create(self, db:Session):
         db.add(self)

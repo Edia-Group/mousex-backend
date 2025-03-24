@@ -57,7 +57,7 @@ def create_test(
                 varianti=opzioni
             )
         )
-    print(len(domande_with_options))
+        
     return DomandaRisposta(
         domande=domande_with_options, test_id=new_test.id_test, data_ora_inizio=new_test.data_ora_inizio
     ) 
