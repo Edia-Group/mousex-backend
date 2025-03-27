@@ -16,7 +16,7 @@ class Test(Base):
     utente_id =  Column(Integer, ForeignKey("users.id"), nullable=False)
     data_ora_fine = Column(DateTime(), nullable=True)
     data_ora_inserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
-    nr_test = Column(Integer, nullable=False, default =0)
+    contatore = Column(Integer, default =0, nullable=True)
     tempo_impiegato = Column(Float, nullable=True, default =0)
     malus_f5 = Column(Boolean, nullable=False, default=False)
     numero_errori = Column(Integer, nullable=False, default=0)
@@ -33,8 +33,8 @@ class Test(Base):
         return self
     
     @staticmethod
-    def create(id : int, secondi_ritardo : int , tipo: str, db : Session):
-        new_test = Test(utente_id = id, data_ora_inizio = datetime.now() + timedelta(seconds=secondi_ritardo) + timedelta(hours=1), tipo = tipo)
+    def create(id : int, secondi_ritardo : int , tipo: str, db : Session, contatore = None):
+        new_test = Test(utente_id = id, data_ora_inizio = datetime.now() + timedelta(seconds=secondi_ritardo) + timedelta(hours=1), tipo = tipo, contatore = contatore)
         db.add(new_test)
         db.commit()
         db.refresh(new_test)

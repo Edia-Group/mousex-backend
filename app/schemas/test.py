@@ -1,7 +1,6 @@
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, Dict
-from app.schemas.domande import Pagina
+from typing import Optional, Dict, List
 
 class TestBase(BaseModel):
     id_test: int
@@ -33,6 +32,16 @@ class TestCreateRequest(BaseModel):
     tipo: str
     secondi_ritardo: int = 5
     group_id: Optional[int] = None
+
+class Domanda(BaseModel):
+    corpo: str
+    opzioni: List[str]
+    risposta_esatta: str
+    tipo: str
+
+
+class Pagina(BaseModel):
+    domanda: List[Domanda]
 
 class FormattedTest(BaseModel):
     formattedTest: Dict[str, Pagina]

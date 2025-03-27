@@ -14,6 +14,10 @@ from app.models.testAdmin import TestAdmin
 from app.models.test import Test
 from sqlalchemy import text
 from app.utils.test import generate_distinct_variations
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 test_router = APIRouter(
     prefix="/test", 
@@ -69,20 +73,22 @@ def read_tests_group(idTest: int, token: str = Depends(oauth2_scheme), db: Sessi
     return db.query(Test).filter(Test.idTest == idTest, Test.utente_id == user.id).first()
 
 @test_router.post("/admin-test")
-async def create_domande(FormattedTest: FormattedTest, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+async def create_domande(formattedTest: FormattedTest, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
     try:
         user = get_username_from_token(token, db)
 
         domanda_varianti_map = {}
         domande_data = []
 
-        for pagine_number, pagina in FormattedTest.formattedTest.items():
-            for domanda in pagina.domanda:
+        for pagine_number, pagina in formattedTest.formattedTest.items():
+            for posizione, domanda in enumerate(pagina.domanda):
                 new_domanda = Domanda(
                     corpo=domanda.corpo,
                     risposta_esatta=domanda.risposta_esatta,
                     tipo=domanda.tipo,
-                    numero_pagina=int(pagine_number.strip("pagina"))
+                    numero_pagina=int(pagine_number.strip("pagina")),
+                    posizione=posizione
                 )
                 domande_data.append(new_domanda)
 
@@ -102,8 +108,8 @@ async def create_domande(FormattedTest: FormattedTest, token: str = Depends(oaut
         inserted_ids = []
         for domanda in domande_data:
             insert_stmt = text(
-                "INSERT INTO domande (corpo, risposta_esatta, tipo, numero_pagina, attivo) "
-                "VALUES (:corpo, :risposta_esatta, :tipo, :numero_pagina, :attivo) "
+                "INSERT INTO domande (corpo, risposta_esatta, tipo, numero_pagina, attivo, posizione) "
+                "VALUES (:corpo, :risposta_esatta, :tipo, :numero_pagina, :attivo, :posizione) "
                 "RETURNING id_domanda"
             )
             result = db.execute(
@@ -114,6 +120,7 @@ async def create_domande(FormattedTest: FormattedTest, token: str = Depends(oaut
                     "tipo": domanda.tipo,
                     "numero_pagina": domanda.numero_pagina,
                     "attivo": True,
+                    "posizione": domanda.posizione
                 },
             )
             inserted_ids.append(result.scalar())
@@ -131,13 +138,22 @@ async def create_domande(FormattedTest: FormattedTest, token: str = Depends(oaut
 
         db.bulk_save_objects(varianti_to_insert)
         db.commit()
-
-        new_test = Test.create(
-            id=user.id,
-            secondi_ritardo=5,
-            tipo='collettivo' if FormattedTest.data_ora_inizio else 'prefatto',
-            db=db
-        )
+        max_counter = db.query(Test).filter(Test.tipo == 'prefatto', Test.contatore != None).order_by(Test.contatore.desc()).first()
+        if formattedTest.data_ora_inizio:
+            new_test = Test.create(
+                id=user.id,
+                secondi_ritardo=5,
+                tipo= 'collettivo',
+                db=db,
+            )
+        else:
+            new_test = Test.create(
+                id=user.id,
+                secondi_ritardo=5,
+                tipo= 'prefatto',
+                db=db,
+                contatore = 1 if not max_counter else max_counter.contatore + 1
+            )
         
         test_admin_data = [
             TestAdmin(
@@ -146,11 +162,12 @@ async def create_domande(FormattedTest: FormattedTest, token: str = Depends(oaut
             )
             for domanda_id in inserted_ids
         ]
+        
 
         db.bulk_save_objects(test_admin_data)
         db.commit()
 
-        return FormattedTest
+        return formattedTest
     except Exception as e:
         print(e)
         db.rollback()

@@ -13,6 +13,7 @@ class Domanda(Base):
     numero_pagina = Column(Integer, nullable=True)
     attivo = Column(Boolean, nullable=False, default=True)
     risposta_esatta = Column(String(500), nullable=False)
+    posizione = Column(Integer, nullable=True)
 
     def create(self, db : Session):
         db.add(self)

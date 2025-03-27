@@ -7,6 +7,12 @@ from typing import Optional
 class Opzione(BaseModel):
     corpo: str
 
+class DomandaTest(BaseModel):
+    corpo: str
+    opzioni: List[str]
+    risposta_esatta: str
+    tipo: str
+
 class Domanda(BaseModel):
     corpo: str
     risposta_esatta: str
@@ -15,7 +21,7 @@ class Domanda(BaseModel):
         from_attributes = True
 
 class Pagina(BaseModel):
-    domanda: List[Domanda]
+    domanda: List[DomandaTest]
 
 class FormattedQuestion(BaseModel):
     corpo: str
