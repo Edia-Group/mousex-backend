@@ -20,3 +20,4 @@ class Domanda(Base):
         db.commit()
         db.refresh(self)
         return self
+    

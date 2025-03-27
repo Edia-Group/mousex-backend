@@ -14,6 +14,7 @@ class Test(Base):
     nr_gruppo = Column(Integer, nullable=False, default = 0)
     secondi_ritardo = Column(Integer, nullable=False, default=5)
     utente_id =  Column(Integer, ForeignKey("users.id"), nullable=False)
+    testgroup_id =  Column(Integer, ForeignKey("testsgroup.id"), nullable=True)
     data_ora_fine = Column(DateTime(), nullable=True)
     data_ora_inserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     contatore = Column(Integer, default =0, nullable=True)

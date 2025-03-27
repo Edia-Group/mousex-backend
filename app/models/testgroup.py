@@ -14,6 +14,7 @@ class TestsGroup(Base):
     data_ora_inizio = Column(DateTime(timezone=True), nullable=True, default=None)
     data_ora_inserimento = Column(DateTime(timezone=True), nullable=False, default=None)
     utente_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    testprefattigroup_id = Column(Integer, ForeignKey("testsprefattigroup.id"), nullable=True)
 
     utente = relationship("User")
 
