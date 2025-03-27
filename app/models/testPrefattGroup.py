@@ -14,7 +14,8 @@ class TestPrefattiGroup(Base):
 
     @staticmethod
     def create(nome: str, db : Session):
-        new_testgroup_prefatto = db.add(TestPrefattiGroup(nome=nome))
+        new_testgroup_prefatto = (TestPrefattiGroup(nome=nome))
+        db.add(new_testgroup_prefatto)
         db.commit()
         db.refresh(new_testgroup_prefatto)
         return new_testgroup_prefatto

@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from app.core.database import Base
 from sqlalchemy.orm import Session
 from datetime import datetime
-from app.models.statistiche import Statistiche
+from app.services.statistiche import create_statistiche
 
 class User(Base):
     __tablename__ = "users"
@@ -20,8 +20,5 @@ class User(Base):
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
-        new_stella = Statistiche(utente_id=new_user.id, tipo_domanda='stelle', nr_errori=0)
-        db.add(new_stella)
-        db.commit()
-        db.refresh(new_stella)
+        create_statistiche(db, new_user.id)
         return new_user

@@ -17,3 +17,9 @@ class StatisticheTestSettimanali(BaseModel):
 class TestBaseStats(BaseModel):
     Test: TestBase
     utente: User
+
+class StatisticheBase(BaseModel):
+    tipo_domanda : str
+    nr_errori : int
+    utente_id : int
+    id : int

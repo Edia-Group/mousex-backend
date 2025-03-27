@@ -15,6 +15,7 @@ from app.models.test import Test
 from sqlalchemy import text
 from app.utils.test import generate_distinct_variations
 import logging
+from app.models.testgroup import TestsGroup
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -138,7 +139,6 @@ async def create_domande(formattedTest: FormattedTest, token: str = Depends(oaut
 
         db.bulk_save_objects(varianti_to_insert)
         db.commit()
-        max_counter = db.query(Test).filter(Test.tipo == 'prefatto', Test.contatore != None).order_by(Test.contatore.desc()).first()
         if formattedTest.data_ora_inizio:
             new_test = Test.create(
                 id=user.id,
@@ -147,14 +147,20 @@ async def create_domande(formattedTest: FormattedTest, token: str = Depends(oaut
                 db=db,
             )
         else:
+            id_testgroupprefatto = formattedTest.nome_prefatto
+            testgroup_associated = db.query(TestsGroup).filter(TestsGroup.id == id_testgroupprefatto).first()
             new_test = Test.create(
                 id=user.id,
                 secondi_ritardo=5,
                 tipo= 'prefatto',
                 db=db,
-                contatore = 1 if not max_counter else max_counter.contatore + 1
+                contatore = testgroup_associated.nr_test,
+                testgroup_id = testgroup_associated.id
             )
-        
+            testgroup_associated.nr_test += 1
+            db.commit()
+            db.refresh(testgroup_associated)
+            
         test_admin_data = [
             TestAdmin(
                 id_test=new_test.id_test,

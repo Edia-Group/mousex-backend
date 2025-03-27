@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from app.core.database import Base
 from sqlalchemy.orm import Session, relationship
+from sqlalchemy.sql import func
 
 class TestsGroup(Base):
     __tablename__ = "testsgroup"
@@ -12,7 +13,7 @@ class TestsGroup(Base):
     in_sequenza = Column(Boolean, nullable=False, default=True)
     secondi_ritardo = Column(Integer, nullable=False, default=5)
     data_ora_inizio = Column(DateTime(timezone=True), nullable=True, default=None)
-    data_ora_inserimento = Column(DateTime(timezone=True), nullable=False, default=None)
+    data_ora_inserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     utente_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     testprefattigroup_id = Column(Integer, ForeignKey("testsprefattigroup.id"), nullable=True)
 

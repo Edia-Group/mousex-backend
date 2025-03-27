@@ -3,7 +3,7 @@ from app.models.domanda import Domanda
 from app.core.security import oauth2_scheme
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.schemas.statistiche import StatisticheStelle, StatisticheTestSettimanali
+from app.schemas.statistiche import StatisticheStelle, StatisticheTestSettimanali, StatisticheBase
 from app.utils.auth import get_username_from_token
 from typing import List
 from app.models.user import User
@@ -20,20 +20,6 @@ statistiche_router = APIRouter(
     responses={404: {"description": "Not found"}},
     )
 
-
-@statistiche_router.get("/stelle", response_model=List[StatisticheStelle])
-def create_test(
-    token: str = Depends(oauth2_scheme), 
-    db: Session = Depends(get_db)
-):        
-    user = get_username_from_token(token, db)
-    users = db.query(User).all()
-    stelle = db.query(Statistiche).filter(Statistiche.tipo_domanda == "stelle").all()
-    stats = sorted(
-        [StatisticheStelle(utente=user, stelle=stella.nr_errori) for user, stella in zip(users, stelle) if stella.utente_id == user.id],
-        key=lambda x: x.stelle
-    )
-    return stats
      
 @statistiche_router.get("/test-settimanali", response_model=List[StatisticheTestSettimanali])
 def create_test(
@@ -50,15 +36,6 @@ def create_test(
         key=lambda x: x.test_settimanali
     )
     return stats
-
-@statistiche_router.get("/riepilogo", response_model=List[TestBaseStats])
-def create_test(
-    token: str = Depends(oauth2_scheme), 
-    db: Session = Depends(get_db)
-):        
-    users = db.query(User).all()
-    tests = db.query(Test).all()
-    return [TestBaseStats(Test=test, utente=user) for user in users for test in tests if test.utente_id == user.id]
 
 @statistiche_router.get("/csv_riepilogo", response_model=List[TestBaseStats])
 def create_test(
@@ -112,3 +89,26 @@ def create_test(
     response = StreamingResponse(output, media_type="text/csv")
     response.headers["Content-Disposition"] = "attachment; filename=tests_dump.csv"
     return response
+
+@statistiche_router.get("/all", response_model=List[StatisticheBase])
+def get_all_statistiche(
+    token: str = Depends(oauth2_scheme), 
+    db: Session = Depends(get_db)
+):        
+    user = get_username_from_token(token, db)
+    return db.query(Statistiche).filter(Statistiche.utente_id == user.id).all()
+
+@statistiche_router.get("/increment/{char_type}", response_model =StatisticheBase)
+def get_all_statistiche(
+    char_type: str,
+    token: str = Depends(oauth2_scheme), 
+    db: Session = Depends(get_db)
+):        
+    user = get_username_from_token(token, db)
+    stats_to_incrememt = db.query(Statistiche).filter(Statistiche.utente_id == user.id, Statistiche.tipo_domanda == char_type).first()
+    stats_to_incrememt.nr_errori += 1
+    db.commit()
+    db.refresh(stats_to_incrememt)
+
+    return stats_to_incrememt
+
