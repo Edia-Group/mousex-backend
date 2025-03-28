@@ -37,27 +37,60 @@ def create_test(
     )
     return stats
 
-@statistiche_router.get("/csv_riepilogo", response_model=List[TestBaseStats])
-def create_test(
+@statistiche_router.get("/csv_riepilogo")
+def download_csv_report(
     token: str = Depends(oauth2_scheme), 
     db: Session = Depends(get_db)
-):        
-    users = db.query(User).all()
-    tests = db.query(Test).all()
-
-    # Prepare CSV data
-    output = StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Test ID", "User ID", "Tipo", "Tempo Impiegato"])  # Header row
-    for test in tests:
-        if test.tipo == "manuale":
-            writer.writerow([test.id_test, test.utente_id, test.tipo, test.tempo_impiegato])
-    output.seek(0)
-
-    # Return CSV as a streaming response
-    response = StreamingResponse(output, media_type="text/csv")
-    response.headers["Content-Disposition"] = "attachment; filename=tests_dump.csv"
-    return response
+):
+    try:
+        tests = db.query(Test).all()
+        users = {user.id: user for user in db.query(User).all()}
+        
+        output = StringIO()
+        writer = csv.writer(output, delimiter=";")
+        
+        # Write header row
+        writer.writerow([
+            "ID Test", 
+            "Username", 
+            "User ID", 
+            "Tipo", 
+            "Data Inizio", 
+            "Data Fine", 
+            "Tempo Impiegato", 
+            "Errori"
+        ])
+        
+        # Write data rows
+        for test in tests:
+            username = users.get(test.utente_id).username if test.utente_id in users else "Unknown"
+            writer.writerow([
+                test.id_test,
+                username,
+                test.utente_id,
+                test.tipo,
+                test.data_ora_inizio.strftime("%Y-%m-%d %H:%M:%S") if test.data_ora_inizio else "",
+                test.data_ora_fine.strftime("%Y-%m-%d %H:%M:%S") if test.data_ora_fine else "",
+                f"{test.tempo_impiegato:.2f}" if test.tempo_impiegato else "",
+                test.numero_errori
+            ])
+        
+        output.seek(0)
+        
+        # Create a StreamingResponse with the CSV data
+        response = StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv"
+        )
+        
+        # Set the Content-Disposition header for download
+        response.headers["Content-Disposition"] = "attachment; filename=riepilogo_test_standard.csv"
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error generating CSV report: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")
 
 @statistiche_router.get("/riepilogo", response_model=List[TestBaseStats])
 def create_test(
@@ -68,27 +101,59 @@ def create_test(
     tests = db.query(Test).all()
     return [TestBaseStats(Test=test, utente=user) for user in users for test in tests if test.utente_id == user.id]
 
-@statistiche_router.get("/csv_riepilogo_collettivi", response_model=List[TestBaseStats])
-def create_test(
+
+@statistiche_router.get("/csv_riepilogo_collettivi")
+def download_csv_report_collettivi(
     token: str = Depends(oauth2_scheme), 
     db: Session = Depends(get_db)
-):        
-    users = db.query(User).all()
-    tests = db.query(Test).all()
-
-    # Prepare CSV data
-    output = StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Test ID", "User ID", "Tipo", "Tempo Impiegato"])  # Header row
-    for test in tests:
-        if test.tipo == "collettivo":
-            writer.writerow([test.id_test, test.utente_id, test.tipo, test.tempo_impiegato])
-    output.seek(0)
-
-    # Return CSV as a streaming response
-    response = StreamingResponse(output, media_type="text/csv")
-    response.headers["Content-Disposition"] = "attachment; filename=tests_dump.csv"
-    return response
+):
+    try:
+        tests = db.query(Test).filter(Test.tipo == "collettivo").all()
+        users = {user.id: user for user in db.query(User).all()}
+        
+        output = StringIO()
+        writer = csv.writer(output, delimiter=';')
+        
+        # Write header row
+        writer.writerow([
+            "ID Test", 
+            "Username", 
+            "User ID", 
+            "Tipo", 
+            "Data Inizio", 
+            "Data Fine", 
+            "Tempo Impiegato", 
+            "Errori"
+        ])
+        
+        # Write data rows
+        for test in tests:
+            username = users.get(test.utente_id).username if test.utente_id in users else "Unknown"
+            writer.writerow([
+                test.id_test,
+                username,
+                test.utente_id,
+                test.tipo,
+                test.data_ora_inizio.strftime("%Y-%m-%d %H:%M:%S") if test.data_ora_inizio else "",
+                test.data_ora_fine.strftime("%Y-%m-%d %H:%M:%S") if test.data_ora_fine else "",
+                f"{test.tempo_impiegato:.2f}" if test.tempo_impiegato else "",
+                test.numero_errori
+            ])
+        
+        output.seek(0)
+        
+        response = StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv"
+        )
+        
+        response.headers["Content-Disposition"] = "attachment; filename=tests_collettivi.csv"
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error generating CSV report for collective tests: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")
 
 @statistiche_router.get("/all", response_model=List[StatisticheBase])
 def get_all_statistiche(
