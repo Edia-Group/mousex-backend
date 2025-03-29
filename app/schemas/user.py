@@ -29,7 +29,8 @@ class UserRead(User):
 
 class UserStats(BaseModel):
     username: str
-    stelle: int
+    media: float
+    media_settimanale: float
     test_settimanali: int
 
 class TestSchema(BaseModel):

@@ -27,7 +27,6 @@ async def read_user_stats(token: str = Depends(oauth2_scheme), db: Session = Dep
     today = datetime.now().date()
     start_of_week = today - timedelta(days=today.weekday())
     end_of_week = start_of_week + timedelta(days=6)
-    stella_stats = db.query(Statistiche).filter(Statistiche.utente_id == user.id, Statistiche.tipo_domanda == 'stelle').first()
 
     test_count = db.query(func.count(Test.id_test)).filter(
         Test.utente_id == user.id,
@@ -35,12 +34,17 @@ async def read_user_stats(token: str = Depends(oauth2_scheme), db: Session = Dep
         func.date(Test.data_ora_fine) <= end_of_week,
     ).scalar() or 0
 
-    stelle_count = stella_stats.nr_errori if stella_stats else 0
+    test_groupped = db.query(Test).filter(Test.utente_id == user.id, Test.tempo_impiegato > 0).all()
+
+    media_settimanale = sum(test.tempo_impiegato for test in test_groupped 
+                            if start_of_week <= test.data_ora_fine.date() <= end_of_week) / test_count if test_count > 0 else 0
+    media = sum(test.tempo_impiegato for test in test_groupped) / len(test_groupped) if test_groupped else 0
 
     return UserStats(
         username=user.username,
-        stelle=stelle_count,
         test_settimanali=test_count,
+        media = media,
+        media_settimanale = media_settimanale
     )
 
 @users_router.get("/last_tests", response_model=UserTests)

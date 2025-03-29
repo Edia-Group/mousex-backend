@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from typing import Optional
 from .user import User
 
@@ -26,6 +26,7 @@ class TestsGroupUpdate(TestsGroupBase):
 
 class TestsGroup(TestsGroupBase):
     id: int
+    testprefattigroup_id: Optional[int] = None
 
     class Config:
         from_attributes = True

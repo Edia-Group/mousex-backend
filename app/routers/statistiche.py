@@ -3,7 +3,7 @@ from app.models.domanda import Domanda
 from app.core.security import oauth2_scheme
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.schemas.statistiche import StatisticheStelle, StatisticheTestSettimanali, StatisticheBase
+from app.schemas.statistiche import Statistiche_Page, StatisticheTestSettimanali, StatisticheBase
 from app.utils.auth import get_username_from_token
 from typing import List
 from app.models.user import User
@@ -59,13 +59,16 @@ def create_test(
     return [TestBaseStats(Test=test, utente=user) for user in users for test in tests if test.utente_id == user.id]
 
 
-@statistiche_router.get("/all", response_model=List[StatisticheBase])
+@statistiche_router.get("/all", response_model=List[Statistiche_Page])
 def get_all_statistiche(
     token: str = Depends(oauth2_scheme), 
     db: Session = Depends(get_db)
 ):        
     user = get_username_from_token(token, db)
-    return db.query(Statistiche).filter(Statistiche.utente_id == user.id).all()
+    stats = db.query(Statistiche).filter(Statistiche.utente_id == user.id).all()
+    test_incompleti = db.query(Test).filter(Test.utente_id == user.id, Test.data_ora_fine == None).count()
+    return [Statistiche_Page(statistiche=stats, test_incompleti=test_incompleti)]
+    
 
 @statistiche_router.get("/increment/{char_type}", response_model =StatisticheBase)
 def get_all_statistiche(

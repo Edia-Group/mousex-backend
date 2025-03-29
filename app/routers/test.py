@@ -73,6 +73,24 @@ def read_tests_group(idTest: int, token: str = Depends(oauth2_scheme), db: Sessi
 
     return db.query(Test).filter(Test.idTest == idTest, Test.utente_id == user.id).first()
 
+@test_router.delete("/delete/{idTest}", response_model=TestResponse)
+def read_tests_group(idTest: int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    user = get_username_from_token(token, db)
+
+    test_delete =  db.query(Test).filter(Test.id_test == idTest, Test.utente_id == user.id).first()
+    if not test_delete:
+        raise HTTPException(status_code=404, detail="Test not found")
+    
+    associated_question = db.query(TestAdmin).filter(TestAdmin.id_test == idTest).all()
+    if associated_question:
+        for question in associated_question:
+            db.delete(question)
+        db.commit()
+
+    db.delete(test_delete)
+    db.commit()
+    return test_delete
+
 @test_router.post("/admin-test")
 async def create_domande(formattedTest: FormattedTest, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
@@ -84,6 +102,7 @@ async def create_domande(formattedTest: FormattedTest, token: str = Depends(oaut
 
         for pagine_number, pagina in formattedTest.formattedTest.items():
             for posizione, domanda in enumerate(pagina.domanda):
+                print(pagine_number)
                 new_domanda = Domanda(
                     corpo=domanda.corpo,
                     risposta_esatta=domanda.risposta_esatta,
@@ -147,8 +166,8 @@ async def create_domande(formattedTest: FormattedTest, token: str = Depends(oaut
                 db=db,
             )
         else:
-            id_testgroupprefatto = formattedTest.nome_prefatto
-            testgroup_associated = db.query(TestsGroup).filter(TestsGroup.id == id_testgroupprefatto).first()
+            id_testgroupprefatto = formattedTest.id_testgroup_prefatto
+            testgroup_associated = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testgroupprefatto).first()
             new_test = Test.create(
                 id=user.id,
                 secondi_ritardo=5,
