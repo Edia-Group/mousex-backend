@@ -109,14 +109,6 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
         db.commit()
         db.refresh(test_group)
 
-    # Delete the test prefatto group
-    test_prefatto = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_testgroup_prefatto).first()
-    if test_prefatto:
-        db.delete(test_prefatto)
-
-    # Commit the changes to the database
-    db.commit()
-
     return {"Success": "Test prefatto group and associated tests deleted successfully"}
 
 @testprefattigroup_router.get("/test/{id_testgroup}", response_model= FormattedTestResponse)
