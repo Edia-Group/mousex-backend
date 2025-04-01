@@ -16,6 +16,19 @@ domande_router = APIRouter(
     responses={404: {"description": "Not found"}},
     )
 
+@domande_router.post("/create_basic_import", response_model=DomandaResponse)
+def create_domanda(
+    domande: List[Domanda],
+    db: Session = Depends(get_db)
+):        
+    new_domande = [DomandaModel(
+        corpo=domanda.corpo,
+        tipo=domanda.tipo,
+        risposta_esatta=domanda.risposta_esatta,
+    )for domanda in domande]
+    db.bulk_save_objects(new_domande)
+    db.commit()
+    return domande
 
 @domande_router.post("/create")
 def create_test(

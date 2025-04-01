@@ -61,7 +61,7 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
     new_testsgroup = [
         TestsGroup(
             nr_test=test_group_associated.nr_test,
-            tipo=f'prefatto {test_prefatto.nome} triggere',
+            tipo=f"prefatto {str(test_prefatto.id)} triggered",
             utente_id=user.id,
             testprefattigroup_id=test_prefatto.id,
             data_ora_inserimento=datetime.now() + timedelta(hours=1),

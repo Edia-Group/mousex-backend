@@ -11,6 +11,7 @@ from app.models.statistiche import Statistiche
 from app.models.test import Test
 from app.schemas.statistiche import TestBaseStats
 import csv
+from app.models.testPrefattGroup import TestPrefattiGroup
 from fastapi.responses import StreamingResponse
 from io import StringIO
 
@@ -136,8 +137,6 @@ def download_csv_report(token: str = Depends(oauth2_scheme), db: Session = Depen
     except Exception as e:
         logger.error(f"Errore generazione riepilogo test CSV: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")
-    
-
 
 @statistiche_router.get("/csv_riepilogo_collettivi")
 def download_csv_report_collettivi(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
@@ -193,14 +192,15 @@ def download_csv_report_collettivi(token: str = Depends(oauth2_scheme), db: Sess
         raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")
 
 
-@statistiche_router.get("/csv_riepilogo_prefatti")
-def download_csv_report_prefatti(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+@statistiche_router.get("/csv_riepilogo_prefatti/{id_testprefatto}")
+def download_csv_report_prefatti(id_testprefatto:str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
+        test_prefatto = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_testprefatto).first()
         non_superuser_users = db.query(User).filter(User.is_superuser == False).all()
         non_superuser_ids = {user.id for user in non_superuser_users}
         
         tests = db.query(Test).filter(
-            Test.tipo == "prefatto",
+            Test.tipo == f"prefatto {str(test_prefatto.id)} triggered",
             Test.utente_id.in_(non_superuser_ids)
         ).all()
         
