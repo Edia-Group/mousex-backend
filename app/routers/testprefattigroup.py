@@ -62,6 +62,7 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
     test_group_associated = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testgroup_prefatto).first()
     if not test_group_associated:
         raise HTTPException(status_code=404, detail="Associated test group not found")
+    
     existing_users = db.query(User).all()
     new_testsgroup = [
         TestsGroup(
@@ -102,11 +103,10 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
     if test_prefatto.generated:
         raise HTTPException(status_code=400, detail="Test prefatto group already triggered")
     if associated_testgroup:
-        associated_tests = db.query(Test).filter(Test.testgroup_id == associated_testgroup.id).all()
-        for test in associated_tests:
-            db.delete(test)
-        db.delete(associated_testgroup)
-    db.commit()
+        associated_testgroup.visibile = False
+        db.commit()
+        db.refresh(associated_testgroup)
+        
     # Delete the test prefatto group
     test_prefatto = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_testgroup_prefatto).first()
     if test_prefatto:
@@ -117,18 +117,14 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
 
     return {"Success": "Test prefatto group and associated tests deleted successfully"}
 
-@testprefattigroup_router.get("/test/{id_testgroup_prefatto}", response_model= FormattedTestResponse)
-def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+@testprefattigroup_router.get("/test/{id_testgroup}", response_model= FormattedTestResponse)
+def read_tests_group(id_testgroup : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
 
-    test_prefatto = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_testgroup_prefatto).first()
-    associated_testgroup = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testgroup_prefatto,
-                                                       TestsGroup.utente_id == user.id).first()
+    associated_testgroup = db.query(TestsGroup).filter(TestsGroup.id == id_testgroup).first()
     tests_to_display = db.query(Test).filter(Test.testgroup_id == associated_testgroup.id, Test.contatore == associated_testgroup.nr_test -1).first()
 
-    if not test_prefatto:
-        raise HTTPException(status_code=404, detail="Test prefatto group not found")
     if not associated_testgroup:
         raise HTTPException(status_code=404, detail="Associated test group not found")
     if not tests_to_display:
@@ -185,7 +181,6 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
     formatted_Test = {
         "formattedTest": formatted_Test,
         "data_ora_inizio": datetime.now(),
-        "id_testgroup_prefatto": test_prefatto.id,
         "id_test": created_test.id_test,
     }
 

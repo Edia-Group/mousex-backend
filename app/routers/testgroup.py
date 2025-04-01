@@ -58,8 +58,8 @@ def delete_all_tests_group(tests_group: TestsGroupDeleteAll, db: Session = Depen
     user = get_username_from_token(token, db)
     deleted_count = db.query(TestsGroup).filter(
         TestsGroup.utente_id == user.id, 
-        TestsGroup.tipo==tests_group.tipo
-    ).delete(synchronize_session=False)
+        TestsGroup.tipo == tests_group.tipo
+    ).update({TestsGroup.visibile: False}, synchronize_session=False)
     
     db.commit()
     return {"deleted_count": deleted_count}
