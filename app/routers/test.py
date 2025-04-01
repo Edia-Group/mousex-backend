@@ -15,6 +15,8 @@ from app.models.test import Test
 from sqlalchemy import text, select
 from app.utils.test import generate_distinct_variations
 import logging
+from typing import List
+from app.schemas.test import TestBase
 from app.models.testgroup import TestsGroup
 
 logging.basicConfig(level=logging.INFO)
@@ -258,3 +260,24 @@ def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme
     }
 
     return formatted_Test
+
+@test_router.get("/test_collettivi/all", response_model= List[TestBase])
+def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+    user = get_username_from_token(token, db)
+    tests_collettivi = db.query(Test).filter(Test.utente_id == user.id, Test.tipo == 'collettivo').all()
+
+    return tests_collettivi
+
+@test_router.delete("/test_collettivi/{id_test_collettivo}", response_model= TestBase)
+def delete_tests_group(id_test_collettivo : int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+    user = get_username_from_token(token, db)
+    to_delete = db.query(Test).filter(Test.utente_id == user.id, Test.id_test == id_test_collettivo).first()
+    if not to_delete:
+        raise HTTPException(status_code=404, detail="Test not found")
+    db.delete(to_delete)
+    db.commit()
+
+    return to_delete
+

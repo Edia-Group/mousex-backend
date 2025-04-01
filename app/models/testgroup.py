@@ -10,7 +10,7 @@ class TestsGroup(Base):
     nr_test = Column(Integer, nullable=False)
     nr_gruppo = Column(Integer, nullable=False, default=0)
     tipo = Column(String(50), nullable=False, default='manuale')
-    in_sequenza = Column(Boolean, nullable=False, default=True)
+    visibile = Column(Boolean, nullable=True, default=True)
     secondi_ritardo = Column(Integer, nullable=False, default=5)
     data_ora_inizio = Column(DateTime(timezone=True), nullable=True, default=None)
     data_ora_inserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

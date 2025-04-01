@@ -47,8 +47,9 @@ def delete_tests_group(tests_group: TestsGroupDelete, db: Session = Depends(get_
     user = get_username_from_token(token, db)
     db_tests_group = db.query(TestsGroup).filter(TestsGroup.utente_id == user.id, TestsGroup.id==tests_group.id).first()
     if db_tests_group:
-        db.delete(db_tests_group)
+        db_tests_group.visibile = False
         db.commit()
+        db.refresh(db_tests_group)
     return db_tests_group
 
 
@@ -67,7 +68,7 @@ def delete_all_tests_group(tests_group: TestsGroupDeleteAll, db: Session = Depen
 def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
-    db_tests_group = db.query(TestsGroup).filter(TestsGroup.utente_id== user.id).all()
+    db_tests_group = db.query(TestsGroup).filter(TestsGroup.utente_id== user.id, TestsGroup.visibile == True).all()
     return db_tests_group
 
 @testgroup_router.get("/decrement/{id_TestGroup}", response_model= TestsGroupWithUser)
