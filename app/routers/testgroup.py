@@ -69,7 +69,7 @@ def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
     user = get_username_from_token(token, db)
     db_tests_group = db.query(TestsGroup).filter(TestsGroup.utente_id== user.id, TestsGroup.visibile == True).all()
-    return 
+    return db_tests_group
 
 @testgroup_router.get("/all_triggered", response_model= List[TestsGroupWithUser] )
 def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
