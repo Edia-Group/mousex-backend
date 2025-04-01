@@ -7,12 +7,12 @@ from app.utils.auth import get_username_from_token
 from app.schemas.test import TestResponse
 from app.utils.user import get_random_domande_variante
 from app.schemas.domande import DomandaRisposta, DomandaOptions
-from app.schemas.test import TestCreateRequest, FormattedTest
+from app.schemas.test import TestCreateRequest, FormattedTest, FormattedTestResponse
 from app.models.domanda import Domanda
 from app.models.variante import Variante
 from app.models.testAdmin import TestAdmin
 from app.models.test import Test
-from sqlalchemy import text
+from sqlalchemy import text, select
 from app.utils.test import generate_distinct_variations
 import logging
 from app.models.testgroup import TestsGroup
@@ -197,3 +197,64 @@ async def create_domande(formattedTest: FormattedTest, token: str = Depends(oaut
         print(e)
         db.rollback()
         raise HTTPException(status_code=500, detail="Internal server error")
+    
+@test_router.get("/test_collettivo/{id_testcollettivo}", response_model= FormattedTestResponse)
+def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+    user = get_username_from_token(token, db)
+
+    tests_to_display = db.query(Test).filter(Test.id_test == id_testcollettivo).first()
+
+    if not tests_to_display:
+        raise HTTPException(status_code=404, detail="No test to display")
+    
+    created_test = Test.create(
+        id=user.id, 
+        secondi_ritardo=tests_to_display.secondi_ritardo,
+        tipo=tests_to_display.tipo + str(tests_to_display.id_test),
+        db=db,
+        contatore=tests_to_display.contatore,
+        testgroup_id=tests_to_display.id
+    )
+
+    domande_list = (
+        db.query(Domanda)
+        .join(TestAdmin, Domanda.id_domanda == TestAdmin.id_domanda)
+        .filter(TestAdmin.id_test == tests_to_display.id_test)
+        .all()
+    )
+
+    formatted_Test = {} 
+
+    for domanda in domande_list:
+        if 'pagina'+str(domanda.numero_pagina) not in formatted_Test.keys():
+            formatted_Test['pagina'+str(domanda.numero_pagina)] = {
+                'domanda': [],
+            }
+
+    varianti = db.execute(select(Domanda, Variante).join(Variante, Domanda.id_domanda == Variante.domanda_id)).all()
+
+    domanda_varianti = {}
+
+    # Sort domande_list by domanda.posizione
+    domande_list_sorted = sorted(domande_list, key=lambda domanda: domanda.posizione)
+
+    for domanda in domande_list_sorted:
+        domanda_varianti[domanda.id_domanda] = []
+        formatted_Test['pagina'+str(domanda.numero_pagina)]['domanda'].append({
+            'corpo': domanda.corpo,
+            'risposta_esatta': domanda.risposta_esatta,
+            'tipo': domanda.tipo,
+            'opzioni': [],
+        })
+
+    for domanda, variante in varianti:
+        if domanda.id_domanda in domanda_varianti.keys():
+            formatted_Test['pagina'+str(domanda.numero_pagina)]['domanda'][domanda.posizione]['opzioni'].append(variante.corpo)
+
+    formatted_Test = {
+        "formattedTest": formatted_Test,
+        "id_test": created_test.id_test,
+    }
+
+    return formatted_Test

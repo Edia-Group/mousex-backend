@@ -15,7 +15,7 @@ from app.models.user import User
 from app.models.domanda import Domanda
 from app.models.variante import Variante
 from sqlalchemy import select
-from app.schemas.test import FormattedTest
+from app.schemas.test import FormattedTestResponse
 
 testprefattigroup_router = APIRouter(
     prefix="/testprefattigroup",
@@ -117,7 +117,7 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
 
     return {"Success": "Test prefatto group and associated tests deleted successfully"}
 
-@testprefattigroup_router.get("/test/{id_testgroup_prefatto}", response_model= FormattedTest)
+@testprefattigroup_router.get("/test/{id_testgroup_prefatto}", response_model= FormattedTestResponse)
 def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
@@ -185,7 +185,8 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
     formatted_Test = {
         "formattedTest": formatted_Test,
         "data_ora_inizio": datetime.now(),
-        "id_testgroup_prefatto": test_prefatto.id
+        "id_testgroup_prefatto": test_prefatto.id,
+        "id_test": created_test.id_test,
     }
 
     return formatted_Test
