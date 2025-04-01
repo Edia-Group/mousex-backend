@@ -104,11 +104,10 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
     db.commit()
     db.refresh(test_prefatto)
 
-    if associated_testgroup:
-        for test_group in associated_testgroup:
-            test_group.visibile = False
-            db.commit()
-            db.refresh(associated_testgroup)
+    for test_group in associated_testgroup:
+        test_group.visibile = False
+        db.commit()
+        db.refresh(test_group)
 
     # Delete the test prefatto group
     test_prefatto = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_testgroup_prefatto).first()
