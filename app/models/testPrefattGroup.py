@@ -11,6 +11,7 @@ class TestPrefattiGroup(Base):
     generated = Column(Boolean, nullable=False, default=False)
     visible = Column(Boolean, nullable=False, default=False)
     data_ora_inserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    is_deleted = Column(Boolean, nullable=True, default=False)
 
     @staticmethod
     def create(nome: str, db : Session):

@@ -26,8 +26,7 @@ testprefattigroup_router = APIRouter(
 @testprefattigroup_router.get("/all", response_model= List[TestPrefattiGroupBase] )
 def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
-    return db.query(TestPrefattiGroup).all()
-
+    return db.query(TestPrefattiGroup).filter(TestPrefattiGroup.is_deleted == False).all()
 
 @testprefattigroup_router.get("/create/{nome_testgroup_prefatto}", response_model= TestPrefattiGroupBase )
 def read_tests_group(nome_testgroup_prefatto : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
@@ -97,14 +96,19 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
 
     # Delete all associated tests
     test_prefatto = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_testgroup_prefatto).first()
-    associated_testgroup = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testgroup_prefatto).first()
+    associated_testgroup = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testgroup_prefatto).all()
     if test_prefatto is None:
         raise HTTPException(status_code=404, detail="Test prefatto group not found")
+    
+    test_prefatto.is_deleted = True
+    db.commit()
+    db.refresh(test_prefatto)
 
     if associated_testgroup:
-        associated_testgroup.visibile = False
-        db.commit()
-        db.refresh(associated_testgroup)
+        for test_group in associated_testgroup:
+            test_group.visibile = False
+            db.commit()
+            db.refresh(associated_testgroup)
 
     # Delete the test prefatto group
     test_prefatto = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_testgroup_prefatto).first()
