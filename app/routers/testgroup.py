@@ -69,6 +69,18 @@ def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
     user = get_username_from_token(token, db)
     db_tests_group = db.query(TestsGroup).filter(TestsGroup.utente_id== user.id, TestsGroup.visibile == True).all()
+    return 
+
+@testgroup_router.get("/all_triggered", response_model= List[TestsGroupWithUser] )
+def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+    user = get_username_from_token(token, db)
+    db_tests_group = db.query(TestsGroup).filter(
+        TestsGroup.utente_id == user.id, 
+        TestsGroup.visibile == True, 
+    ).all()
+
+    db_tests_group = [test_group for test_group in db_tests_group if test_group.tipo.contains("triggered")]
     return db_tests_group
 
 @testgroup_router.get("/decrement/{id_TestGroup}", response_model= TestsGroupWithUser)
