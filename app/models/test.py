@@ -35,7 +35,7 @@ class Test(Base):
     
     @staticmethod
     def create(id : int, secondi_ritardo : int , tipo: str, db : Session, contatore = None, testgroup_id = None):
-        new_test = Test(utente_id = id, data_ora_inizio = datetime.now() + timedelta(seconds=secondi_ritardo) 
+        new_test = Test(utente_id = id, data_ora_inizio = datetime.now() + timedelta(seconds=secondi_ritardo) + timedelta(hours=2)
                         , tipo = tipo, contatore = contatore, testgroup_id = testgroup_id)
         db.add(new_test)
         db.commit()
