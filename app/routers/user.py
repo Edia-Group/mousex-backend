@@ -51,7 +51,7 @@ async def read_user_stats(token: str = Depends(oauth2_scheme), db: Session = Dep
 async def get_last_tests(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     user = get_username_from_token(token, db)
 
-    last_tests = db.query(Test).filter(Test.utente_id == user.id, Test.tempo_impiegato > 0).order_by(desc(Test.data_ora_inserimento)).limit(100).all()
+    last_tests = db.query(Test).filter(Test.utente_id == user.id, Test.tempo_impiegato > 0, Test.tempo_impiegato != None).order_by(desc(Test.data_ora_inserimento)).limit(100).all()
 
     test_schemas = [TestSchema(
         idTest=test.id_test,
@@ -68,4 +68,4 @@ async def get_last_tests(token: str = Depends(oauth2_scheme), db: Session = Depe
         tempo_impiegato = test.tempo_impiegato
     ) for test in last_tests]
 
-    return UserTests(username=user.username, tests=test_schemas)
+    return UserTests(username=user.username, tests=test_schemas[::-1])
