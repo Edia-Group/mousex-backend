@@ -39,7 +39,8 @@ def read_tests_group(nome_testgroup_prefatto : str, token: str = Depends(oauth2_
             tipo = 'prefatto',
             utente_id = user.id,
             testprefattigroup_id = new_testprefattogroup.id,
-            data_ora_inserimento = datetime.now() + timedelta(hours=1)
+            data_ora_inserimento = datetime.now() + timedelta(hours=1),
+            visibile = False,
         ),
         db
     )

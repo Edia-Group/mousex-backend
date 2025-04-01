@@ -27,7 +27,7 @@ class Test(Base):
     def validate(self, db: Session):
         self.is_validate = True
         if self.data_ora_inizio:
-            self.data_ora_fine = datetime.now()
+            self.data_ora_fine = datetime.now() + timedelta(hours=2)
             self.tempo_impiegato = float((self.data_ora_fine - self.data_ora_inizio).total_seconds())
         db.commit()
         db.refresh(self)
