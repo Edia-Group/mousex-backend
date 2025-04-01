@@ -27,7 +27,7 @@ class Test(Base):
     def validate(self, db: Session):
         self.is_validate = True
         if self.data_ora_inizio:
-            self.data_ora_fine = datetime.now() + timedelta(hours=1)
+            self.data_ora_fine = datetime.now()
             self.tempo_impiegato = float((self.data_ora_fine - self.data_ora_inizio).total_seconds())
         db.commit()
         db.refresh(self)
@@ -35,7 +35,7 @@ class Test(Base):
     
     @staticmethod
     def create(id : int, secondi_ritardo : int , tipo: str, db : Session, contatore = None, testgroup_id = None):
-        new_test = Test(utente_id = id, data_ora_inizio = datetime.now() + timedelta(seconds=secondi_ritardo) + timedelta(hours=1)
+        new_test = Test(utente_id = id, data_ora_inizio = datetime.now() + timedelta(seconds=secondi_ritardo) 
                         , tipo = tipo, contatore = contatore, testgroup_id = testgroup_id)
         db.add(new_test)
         db.commit()

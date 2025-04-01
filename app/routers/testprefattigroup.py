@@ -9,8 +9,13 @@ from app.models.testgroup import TestsGroup
 from app.utils.auth import get_username_from_token
 from datetime import datetime, timedelta
 from app.models.test import Test
+from app.models.testAdmin import TestAdmin
 from app.schemas.test import TestBase
 from app.models.user import User
+from app.models.domanda import Domanda
+from app.models.variante import Variante
+from sqlalchemy import select
+from app.schemas.test import FormattedTest
 
 testprefattigroup_router = APIRouter(
     prefix="/testprefattigroup",
@@ -111,3 +116,76 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
     db.commit()
 
     return {"Success": "Test prefatto group and associated tests deleted successfully"}
+
+@testprefattigroup_router.get("/test/{id_testgroup_prefatto}", response_model= FormattedTest)
+def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+    user = get_username_from_token(token, db)
+
+    test_prefatto = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_testgroup_prefatto).first()
+    associated_testgroup = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testgroup_prefatto,
+                                                       TestsGroup.utente_id == user.id).first()
+    tests_to_display = db.query(Test).filter(Test.testgroup_id == associated_testgroup.id, Test.contatore == associated_testgroup.nr_test -1).first()
+
+    if not test_prefatto:
+        raise HTTPException(status_code=404, detail="Test prefatto group not found")
+    if not associated_testgroup:
+        raise HTTPException(status_code=404, detail="Associated test group not found")
+    if not tests_to_display:
+        raise HTTPException(status_code=404, detail="No tests to display")
+    
+    associated_testgroup.nr_test -= 1
+    db.commit()
+    db.refresh(associated_testgroup)
+    
+    created_test = Test.create(
+        id=user.id, 
+        secondi_ritardo=associated_testgroup.secondi_ritardo,
+        tipo=associated_testgroup.tipo,
+        db=db,
+        contatore=tests_to_display.contatore,
+        testgroup_id=associated_testgroup.id
+    )
+
+    domande_list = (
+        db.query(Domanda)
+        .join(TestAdmin, Domanda.id_domanda == TestAdmin.id_domanda)
+        .filter(TestAdmin.id_test == tests_to_display.id_test)
+        .all()
+    )
+
+    formatted_Test = {} 
+
+    for domanda in domande_list:
+        if 'pagina'+str(domanda.numero_pagina) not in formatted_Test.keys():
+            formatted_Test['pagina'+str(domanda.numero_pagina)] = {
+                'domanda': [],
+            }
+
+    varianti = db.execute(select(Domanda, Variante).join(Variante, Domanda.id_domanda == Variante.domanda_id)).all()
+
+    domanda_varianti = {}
+
+    # Sort domande_list by domanda.posizione
+    domande_list_sorted = sorted(domande_list, key=lambda domanda: domanda.posizione)
+
+    for domanda in domande_list_sorted:
+        domanda_varianti[domanda.id_domanda] = []
+        formatted_Test['pagina'+str(domanda.numero_pagina)]['domanda'].append({
+            'corpo': domanda.corpo,
+            'risposta_esatta': domanda.risposta_esatta,
+            'tipo': domanda.tipo,
+            'opzioni': [],
+        })
+
+    for domanda, variante in varianti:
+        if domanda.id_domanda in domanda_varianti.keys():
+            formatted_Test['pagina'+str(domanda.numero_pagina)]['domanda'][domanda.posizione]['opzioni'].append(variante.corpo)
+
+    formatted_Test = {
+        "formattedTest": formatted_Test,
+        "data_ora_inizio": datetime.now(),
+        "id_testgroup_prefatto": test_prefatto.id
+    }
+
+    return formatted_Test
