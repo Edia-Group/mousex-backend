@@ -80,7 +80,7 @@ def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(
         TestsGroup.visibile == True, 
     ).all()
 
-    db_tests_group = [test_group for test_group in db_tests_group if test_group.tipo.contains("triggered")]
+    db_tests_group = [test_group for test_group in db_tests_group if ('triggered' in test_group.tipo)]
     return db_tests_group
 
 @testgroup_router.get("/decrement/{id_TestGroup}", response_model= TestsGroupWithUser)
