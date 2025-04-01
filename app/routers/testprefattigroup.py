@@ -100,13 +100,12 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
     associated_testgroup = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testgroup_prefatto).first()
     if test_prefatto is None:
         raise HTTPException(status_code=404, detail="Test prefatto group not found")
-    if test_prefatto.generated:
-        raise HTTPException(status_code=400, detail="Test prefatto group already triggered")
+
     if associated_testgroup:
         associated_testgroup.visibile = False
         db.commit()
         db.refresh(associated_testgroup)
-        
+
     # Delete the test prefatto group
     test_prefatto = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_testgroup_prefatto).first()
     if test_prefatto:
