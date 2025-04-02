@@ -27,8 +27,8 @@ def create_test(
     token: str = Depends(oauth2_scheme), 
     db: Session = Depends(get_db)
 ):        
-    users = db.query(User).filter(User.is_superuser == False).all()
-    tests = db.query(Test).filter(Test.tipo == "manuale").all()
+    users = db.query(User).all()
+    tests = db.query(Test).all()
     stats = []
     for user in users:
         user_tests = [test for test in tests if test.utente_id == user.id]
