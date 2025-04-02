@@ -272,3 +272,9 @@ def delete_tests_group(id_test_collettivo : int, token: str = Depends(oauth2_sch
 
     return to_delete
 
+@test_router.get("/test_collettivo/trigger/{id_testcollettivo}", response_model= DomandaRisposta)
+def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+    user = get_username_from_token(token, db)
+
+    tests_to_display = db.query(Test).filter(Test.id_test == id_testcollettivo).first()

@@ -63,7 +63,7 @@ async def get_last_tests(token: str = Depends(oauth2_scheme), db: Session = Depe
         utente_id=test.utente_id,
         dataOraFine=test.data_ora_fine,
         dataOraInserimento=test.data_ora_inserimento,
-        malusF5=test.malus_f5,
+        is_active=test.is_active,
         numeroErrori=test.numero_errori,
         tempo_impiegato = test.tempo_impiegato
     ) for test in last_tests]

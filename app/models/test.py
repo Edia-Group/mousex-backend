@@ -19,7 +19,7 @@ class Test(Base):
     data_ora_inserimento = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     contatore = Column(Integer, default =0, nullable=True)
     tempo_impiegato = Column(Float, nullable=True, default =0)
-    malus_f5 = Column(Boolean, nullable=False, default=False)
+    is_active = Column(Boolean, nullable=True, default=True)
     numero_errori = Column(Integer, nullable=False, default=0)
     is_validate = Column(Boolean, nullable=True, default=False)
 
