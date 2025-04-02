@@ -16,6 +16,7 @@ from sqlalchemy import text, select
 from app.utils.test import generate_distinct_variations
 import logging
 from typing import List
+from datetime import datetime, timedelta
 from app.schemas.test import TestBase
 from app.models.testgroup import TestsGroup
 
@@ -200,7 +201,7 @@ async def create_domande(formattedTest: FormattedTest, token: str = Depends(oaut
         db.rollback()
         raise HTTPException(status_code=500, detail="Internal server error")
     
-@test_router.get("/test_collettivo/{id_testcollettivo}", response_model= FormattedTestResponse)
+@test_router.get("/test_collettivo/{id_testcollettivo}", response_model= DomandaRisposta)
 def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
@@ -213,10 +214,9 @@ def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme
     created_test = Test.create(
         id=user.id, 
         secondi_ritardo=tests_to_display.secondi_ritardo,
-        tipo=tests_to_display.tipo + str(tests_to_display.id_test),
+        tipo="collettivo" + " " + str(tests_to_display.id_test),
         db=db,
         contatore=tests_to_display.contatore,
-        testgroup_id=tests_to_display.id
     )
 
     domande_list = (
@@ -226,46 +226,37 @@ def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme
         .all()
     )
 
-    formatted_Test = {} 
+    varianti = db.execute(
+        select(Domanda, Variante)
+        .join(Variante, Domanda.id_domanda == Variante.domanda_id)
+    ).all()
 
-    for domanda in domande_list:
-        if 'pagina'+str(domanda.numero_pagina) not in formatted_Test.keys():
-            formatted_Test['pagina'+str(domanda.numero_pagina)] = {
-                'domanda': [],
-            }
-
-    varianti = db.execute(select(Domanda, Variante).join(Variante, Domanda.id_domanda == Variante.domanda_id)).all()
-
-    domanda_varianti = {}
-
-    # Sort domande_list by domanda.posizione
-    domande_list_sorted = sorted(domande_list, key=lambda domanda: domanda.posizione)
-
-    for domanda in domande_list_sorted:
-        domanda_varianti[domanda.id_domanda] = []
-        formatted_Test['pagina'+str(domanda.numero_pagina)]['domanda'].append({
-            'corpo': domanda.corpo,
-            'risposta_esatta': domanda.risposta_esatta,
-            'tipo': domanda.tipo,
-            'opzioni': [],
-        })
-
+    grouped_varianti = {}
     for domanda, variante in varianti:
-        if domanda.id_domanda in domanda_varianti.keys():
-            formatted_Test['pagina'+str(domanda.numero_pagina)]['domanda'][domanda.posizione]['opzioni'].append(variante.corpo)
+        if domanda.id_domanda not in grouped_varianti:
+            grouped_varianti[domanda.id_domanda] = {"domanda": domanda, "varianti": []}
+        grouped_varianti[domanda.id_domanda]["varianti"].append(variante.corpo)
+    domande_returned = []
+    print(grouped_varianti)
+    domande_list_sorted = sorted(domande_list, key=lambda domanda: (domanda.numero_pagina, domanda.posizione))
+    for domanda in domande_list_sorted:
+        domande_returned.append(
+            DomandaOptions(
+                domanda=domanda,
+                varianti=grouped_varianti[domanda.id_domanda]["varianti"],
+        ))
 
-    formatted_Test = {
-        "formattedTest": formatted_Test,
-        "id_test": created_test.id_test,
-    }
-
-    return formatted_Test
+    return DomandaRisposta(
+        domande=domande_returned,
+        test_id=created_test.id_test,
+        data_ora_inizio=datetime.now() + timedelta(hours=2),
+    )
 
 @test_router.get("/test_collettivi/all", response_model= List[TestBase])
 def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
-    tests_collettivi = db.query(Test).filter(Test.utente_id == user.id, Test.tipo == 'collettivo').all()
+    tests_collettivi = db.query(Test).filter(Test.tipo == 'collettivo').all()
 
     return tests_collettivi
 

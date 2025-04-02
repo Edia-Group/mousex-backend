@@ -15,7 +15,7 @@ from app.models.user import User
 from app.models.domanda import Domanda
 from app.models.variante import Variante
 from sqlalchemy import select
-from app.schemas.test import FormattedTestResponse
+from app.schemas.domande import DomandaRisposta, DomandaOptions
 
 testprefattigroup_router = APIRouter(
     prefix="/testprefattigroup",
@@ -112,22 +112,30 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
 
     return {"Success": "Test prefatto group and associated tests deleted successfully"}
 
-@testprefattigroup_router.get("/test/{id_testgroup}", response_model= FormattedTestResponse)
+@testprefattigroup_router.get("/test/{id_testgroup}", response_model= DomandaRisposta)
 def read_tests_group(id_testgroup : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
 
-    associated_testgroup = db.query(TestsGroup).filter(TestsGroup.id == id_testgroup).first()
+    user_testgroup = db.query(TestsGroup).filter(TestsGroup.id == id_testgroup).first()
+    if not user_testgroup:
+        raise HTTPException(status_code=404, detail="Test group not found")
+    if user_testgroup.nr_test <= 0:
+        raise HTTPException(status_code=400, detail="No tests available for this group")
+    id_prefatto = int(user_testgroup.tipo.split(" ")[1])
+    test_prefatto = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_prefatto).first()
+    associated_testgroup = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_prefatto).first()
+    if not test_prefatto:
+        raise HTTPException(status_code=404, detail="Test prefatto group not found")
     tests_to_display = db.query(Test).filter(Test.testgroup_id == associated_testgroup.id, Test.contatore == associated_testgroup.nr_test -1).first()
-
     if not associated_testgroup:
         raise HTTPException(status_code=404, detail="Associated test group not found")
     if not tests_to_display:
-        raise HTTPException(status_code=404, detail="No tests to display")
+        raise HTTPException(status_code=404, detail="No tests to display . . .")
     
-    associated_testgroup.nr_test -= 1
+    user_testgroup.nr_test -= 1
     db.commit()
-    db.refresh(associated_testgroup)
+    db.refresh(user_testgroup)
     
     created_test = Test.create(
         id=user.id, 
@@ -145,38 +153,28 @@ def read_tests_group(id_testgroup : str, token: str = Depends(oauth2_scheme), db
         .all()
     )
 
-    formatted_Test = {} 
+    varianti = db.execute(
+        select(Domanda, Variante)
+        .join(Variante, Domanda.id_domanda == Variante.domanda_id)
+    ).all()
 
-    for domanda in domande_list:
-        if 'pagina'+str(domanda.numero_pagina) not in formatted_Test.keys():
-            formatted_Test['pagina'+str(domanda.numero_pagina)] = {
-                'domanda': [],
-            }
-
-    varianti = db.execute(select(Domanda, Variante).join(Variante, Domanda.id_domanda == Variante.domanda_id)).all()
-
-    domanda_varianti = {}
-
-    # Sort domande_list by domanda.posizione
-    domande_list_sorted = sorted(domande_list, key=lambda domanda: domanda.posizione)
-
-    for domanda in domande_list_sorted:
-        domanda_varianti[domanda.id_domanda] = []
-        formatted_Test['pagina'+str(domanda.numero_pagina)]['domanda'].append({
-            'corpo': domanda.corpo,
-            'risposta_esatta': domanda.risposta_esatta,
-            'tipo': domanda.tipo,
-            'opzioni': [],
-        })
-
+    grouped_varianti = {}
     for domanda, variante in varianti:
-        if domanda.id_domanda in domanda_varianti.keys():
-            formatted_Test['pagina'+str(domanda.numero_pagina)]['domanda'][domanda.posizione]['opzioni'].append(variante.corpo)
+        if domanda.id_domanda not in grouped_varianti:
+            grouped_varianti[domanda.id_domanda] = {"domanda": domanda, "varianti": []}
+        grouped_varianti[domanda.id_domanda]["varianti"].append(variante.corpo)
+    domande_returned = []
+    print(grouped_varianti)
+    domande_list_sorted = sorted(domande_list, key=lambda domanda: (domanda.numero_pagina, domanda.posizione))
+    for domanda in domande_list_sorted:
+        domande_returned.append(
+            DomandaOptions(
+                domanda=domanda,
+                varianti=grouped_varianti[domanda.id_domanda]["varianti"],
+        ))
 
-    formatted_Test = {
-        "formattedTest": formatted_Test,
-        "data_ora_inizio": datetime.now(),
-        "id_test": created_test.id_test,
-    }
-
-    return formatted_Test
+    return DomandaRisposta(
+        domande=domande_returned,
+        test_id=created_test.id_test,
+        data_ora_inizio=datetime.now() + timedelta(hours=2),
+    )

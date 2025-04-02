@@ -8,7 +8,7 @@ def generate_distinct_variations(risposta, num_options = random.randint(5,11)):
 
   while len(opzioni) < num_options:
     modified_risposta = list(risposta)
-    if len(risposta) > 0: #prevent error with empty string
+    if len(risposta) > 0:
       index_to_change = random.randint(0, len(risposta) - 1)
       modified_risposta[index_to_change] = random.choice("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
