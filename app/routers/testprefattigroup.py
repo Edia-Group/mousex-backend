@@ -127,7 +127,7 @@ def read_tests_group(id_testgroup : str, token: str = Depends(oauth2_scheme), db
     associated_testgroup = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_prefatto).first()
     if not test_prefatto:
         raise HTTPException(status_code=404, detail="Test prefatto group not found")
-    tests_to_display = db.query(Test).filter(Test.testgroup_id == associated_testgroup.id, Test.contatore == associated_testgroup.nr_test -1).first()
+    tests_to_display = db.query(Test).filter(Test.testgroup_id == associated_testgroup.id, Test.contatore == user_testgroup.nr_test -1).first()
     if not associated_testgroup:
         raise HTTPException(status_code=404, detail="Associated test group not found")
     if not tests_to_display:
