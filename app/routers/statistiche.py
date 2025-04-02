@@ -138,19 +138,13 @@ def download_csv_report(token: str = Depends(oauth2_scheme), db: Session = Depen
         logger.error(f"Errore generazione riepilogo test CSV: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")
 
-@statistiche_router.get("/csv_riepilogo_collettivi")
-def download_csv_report_collettivi(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+@statistiche_router.get("/csv_riepilogo_collettivi/{id_testcollettivo}")
+def download_csv_report_collettivi(id_testcollettivo : int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
-        non_superuser_users = db.query(User).filter(User.is_superuser == False).all()
-        non_superuser_ids = {user.id for user in non_superuser_users}
+        users = db.query(User).all()
         
-        tests = db.query(Test).filter(
-            Test.tipo == "collettivo",
-            Test.utente_id.in_(non_superuser_ids)
-        ).all()
-        
-        users = {user.id: user for user in non_superuser_users}
-        
+        tests = db.query(Test).all()
+        tests = [test for test in tests if test.tipo == f"collettivo {str(id_testcollettivo)}"]        
         output = StringIO()
         writer = csv.writer(output, delimiter=';')
         
