@@ -177,5 +177,5 @@ def read_tests_group(id_testgroup : str, token: str = Depends(oauth2_scheme), db
     return DomandaRisposta(
         domande=domande_returned,
         test_id=created_test.id_test,
-        data_ora_inizio=datetime.now() + timedelta(hours=2),
+        data_ora_inizio=created_test.data_ora_inizio,
     )
