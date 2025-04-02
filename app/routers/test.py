@@ -12,6 +12,7 @@ from app.models.domanda import Domanda
 from app.models.variante import Variante
 from app.models.testAdmin import TestAdmin
 from app.models.test import Test
+from app.models.user import User
 from sqlalchemy import text, select
 from app.utils.test import generate_distinct_variations
 import logging
@@ -260,21 +261,42 @@ def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
     return tests_collettivi
 
-@test_router.delete("/test_collettivi/{id_test_collettivo}", response_model= TestBase)
-def delete_tests_group(id_test_collettivo : int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+@test_router.get("/test_collettivi/me", response_model= List[TestBase])
+def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
-    to_delete = db.query(Test).filter(Test.utente_id == user.id, Test.id_test == id_test_collettivo).first()
+    tests_collettivi = db.query(Test).filter(Test.tipo != 'collettivo',
+                                             Test.utente_id == user.id).all()
+    tests_collettivi = [test for test in tests_collettivi if test.is_active
+                        and test.data_ora_fine is None
+                        and "collettivo " in test.tipo]
+    return tests_collettivi
+
+
+
+@test_router.get("/test_collettivo/trigger/{id_testcollettivo}", response_model= DomandaRisposta)
+def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+    user = get_username_from_token(token, db)
+    Users = db.query(User).all()
+    for user in Users:
+        Test.create(
+            id=user.id, 
+            secondi_ritardo=5,
+            tipo= 'collettivo' + " " + str(id_testcollettivo),
+            db=db,
+            contatore=0,
+        )
+    return {"message": "Test created for all users."}
+
+@test_router.delete("/test_collettivo/delete/{id_testcollettivo}/", response_model= DomandaRisposta)
+def delete_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+    user = get_username_from_token(token, db)
+    to_delete = db.query(Test).filter(Test.utente_id == user.id, Test.id_test == id_testcollettivo).first()
     if not to_delete:
         raise HTTPException(status_code=404, detail="Test not found")
     db.delete(to_delete)
     db.commit()
 
     return to_delete
-
-@test_router.get("/test_collettivo/trigger/{id_testcollettivo}", response_model= DomandaRisposta)
-def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-
-    user = get_username_from_token(token, db)
-
-    tests_to_display = db.query(Test).filter(Test.id_test == id_testcollettivo).first()
