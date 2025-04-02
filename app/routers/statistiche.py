@@ -28,7 +28,7 @@ def create_test(
     db: Session = Depends(get_db)
 ):        
     users = db.query(User).all()
-    tests = db.query(Test).all()
+    tests = db.query(Test).filter(Test.tempo_impiegato > 1).all()
     stats = []
     for user in users:
         user_tests = [test for test in tests if test.utente_id == user.id]
