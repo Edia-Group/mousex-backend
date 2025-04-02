@@ -59,8 +59,7 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
         raise HTTPException(status_code=404, detail="Test prefatto group not found")
     if test_prefatto.generated:
         raise HTTPException(status_code=400, detail="Test prefatto group already triggered")
-    test_group_associated = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testgroup_prefatto,
-                                                         TestsGroup.tipo == 'prefatto').first()
+    test_group_associated = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testgroup_prefatto).first()
     if not test_group_associated:
         raise HTTPException(status_code=404, detail="Associated test group not found")
     
@@ -125,7 +124,8 @@ def read_tests_group(id_testgroup : str, token: str = Depends(oauth2_scheme), db
         raise HTTPException(status_code=400, detail="No tests available for this group")
     id_prefatto = int(user_testgroup.tipo.split(" ")[1])
     test_prefatto = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_prefatto).first()
-    associated_testgroup = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_prefatto).first()
+    associated_testgroup = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_prefatto,
+                                                       TestsGroup.tipo == 'prefatto').first()
     if not test_prefatto:
         raise HTTPException(status_code=404, detail="Test prefatto group not found")
     tests_to_display = db.query(Test).filter(Test.testgroup_id == associated_testgroup.id, Test.contatore == user_testgroup.nr_test -1).first()
