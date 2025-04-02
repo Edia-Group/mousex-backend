@@ -43,7 +43,7 @@ class TestSchema(BaseModel):
     utente_id: int
     dataOraFine: datetime | None
     dataOraInserimento: datetime
-    malusF5: bool
+    is_active: bool
     numeroErrori: int
     tempo_impiegato: float
 
