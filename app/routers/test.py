@@ -369,8 +369,9 @@ def read_tests_group(id_test : str, token: str = Depends(oauth2_scheme), db: Ses
             grouped_varianti[domanda.id_domanda] = {"domanda": domanda, "varianti": []}
         grouped_varianti[domanda.id_domanda]["varianti"].append(variante.corpo)
     domande_returned = []
-    print(grouped_varianti)
+
     domande_list_sorted = sorted(domande_list, key=lambda domanda: (domanda.numero_pagina, domanda.posizione))
+    print(domande_list_sorted)
     for domanda in domande_list_sorted:
         domande_returned.append(
             DomandaOptions(

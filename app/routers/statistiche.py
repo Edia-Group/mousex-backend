@@ -182,7 +182,6 @@ def download_csv_report_collettivi(id_testcollettivo : int, token: str = Depends
         return response
         
     except Exception as e:
-        logger.error(f"Errore generazione csv test collettivi: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")
 
 
@@ -237,5 +236,4 @@ def download_csv_report_prefatti(id_testprefatto:str, token: str = Depends(oauth
         return response
         
     except Exception as e:
-        logger.error(f"Errore generazione csv test prefatti: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error generating report: {str(e)}")

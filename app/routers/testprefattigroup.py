@@ -141,10 +141,10 @@ def read_tests_group(id_testgroup : str, token: str = Depends(oauth2_scheme), db
     created_test = Test.create(
         id=user.id, 
         secondi_ritardo=associated_testgroup.secondi_ritardo,
-        tipo=associated_testgroup.tipo,
+        tipo=user_testgroup.tipo,
         db=db,
         contatore=tests_to_display.contatore,
-        testgroup_id=associated_testgroup.id
+        testgroup_id=user_testgroup.id
     )
 
     domande_list = (
