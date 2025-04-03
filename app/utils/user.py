@@ -4,15 +4,13 @@ import random
 from app.models.domanda import Domanda
 
 def get_random_domande_variante(db: Session):
-
     domande = (
         db.query(Domanda)
         .order_by(sqlfunc.random())
-        .limit(100)
         .all()
     )
-
-    return get_unique_domande(domande)
+    random.shuffle(domande)
+    return get_unique_domande(domande[:55])
 
 def get_unique_domande(domande : list[Domanda]):
     rand_limit_domande = random.randint(12,15)

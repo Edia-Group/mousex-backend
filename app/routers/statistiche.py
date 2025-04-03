@@ -194,7 +194,8 @@ def download_csv_report_prefatti(id_testprefatto:str, token: str = Depends(oauth
         tests = db.query(Test).filter(
             Test.tipo == f"prefatto {str(test_prefatto.id)} triggered",
             Test.utente_id.in_(non_superuser_ids),
-            Test.tempo_impiegato > 0
+            Test.tempo_impiegato > 0,
+            Test.tempo_impiegato != None
         ).all()
         
         users = {user.id: user for user in non_superuser_users}
