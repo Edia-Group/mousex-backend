@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.utils.auth import get_username_from_token
 from app.schemas.test import TestResponse
+from app.models.testPrefattGroup import TestPrefattiGroup
 from app.utils.user import get_random_domande_variante
 from app.schemas.domande import DomandaRisposta, DomandaOptions, DomandaRispostaPrewiew
 from app.schemas.test import TestCreateRequest, FormattedTest
@@ -85,6 +86,38 @@ def read_tests_group(idTest: int, token: str = Depends(oauth2_scheme), db: Sessi
     test_delete =  db.query(Test).filter(Test.id_test == idTest, Test.utente_id == user.id).first()
     if not test_delete:
         raise HTTPException(status_code=404, detail="Test not found")
+    
+    associated_question = db.query(TestAdmin).filter(TestAdmin.id_test == idTest).all()
+    if associated_question:
+        for question in associated_question:
+            db.delete(question)
+        db.commit()
+
+    db.delete(test_delete)
+    db.commit()
+    return test_delete
+
+@test_router.delete("/delete/{idTest}/prefatto/{id_testprefatto}", response_model=TestResponse)
+def read_tests_group(idTest: int, id_testprefatto: int,token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    user = get_username_from_token(token, db)
+
+    prefatto_associated = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_testprefatto).first()
+    if not prefatto_associated:
+        raise HTTPException(status_code=404, detail="TestGroup not found")
+    testgroup_associated = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testprefatto).first()
+    if not testgroup_associated:
+        raise HTTPException(status_code=404, detail="TestGroup not found")
+    
+    all_tests_associated = db.query(Test).filter(Test.testgroup_id == testgroup_associated.id).all()
+    test_delete =  db.query(Test).filter(Test.id_test == idTest, Test.utente_id == user.id).first()
+    if not test_delete:
+        raise HTTPException(status_code=404, detail="Test not found")
+    
+    for test in all_tests_associated:
+        if test.contatore > test_delete.contatore:
+            test.contatore -= 1
+            db.commit()
+            db.refresh(test)
     
     associated_question = db.query(TestAdmin).filter(TestAdmin.id_test == idTest).all()
     if associated_question:
