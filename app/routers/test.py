@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 from app.schemas.test import TestBase
 from app.models.testgroup import TestsGroup
 from app.schemas.testgroup import TestsGroupWithUser
+import pytz
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -287,7 +288,7 @@ def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme
     return DomandaRisposta(
         domande=domande_returned,
         test_id=created_test.id_test,
-        data_ora_inizio=datetime.now() + timedelta(hours=2),
+        data_ora_inizio=datetime.now(pytz.timezone('Europe/Rome')),
     )
 
 @test_router.get("/test_collettivi/all", response_model= List[TestBase])
@@ -300,13 +301,13 @@ def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
     return tests_collettivi
 
-@test_router.get("/test_collettivi/me", response_model= List[TestsGroupWithUser])
+@test_router.get("/test_collettivi/me", response_model= List[TestBase])
 def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
     tests_collettivi = db.query(Test).filter(Test.tipo == 'collettivo',
                                              Test.generated == True,
-                                             Test.data_ora_inizio > datetime.now() + timedelta(hours=2),
+                                             Test.data_ora_inizio > datetime.now(pytz.timezone('Europe/Rome')),
                                              ).all()
 
     return tests_collettivi

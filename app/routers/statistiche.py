@@ -141,10 +141,9 @@ def download_csv_report(token: str = Depends(oauth2_scheme), db: Session = Depen
 @statistiche_router.get("/csv_riepilogo_collettivi/{id_testcollettivo}")
 def download_csv_report_collettivi(id_testcollettivo : int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
-        users = db.query(User).all()
-        
-        tests = db.query(Test).all()
-        tests = [test for test in tests if test.tipo == f"collettivo {str(id_testcollettivo)}"]        
+        print('ciao')
+        tests = db.query(Test, User.username).join(User, Test.utente_id == User.id)
+        tests = tests.filter(Test.tipo == f'collettivo {str(id_testcollettivo)}').order_by(Test.tempo_impiegato.asc()).all()
         output = StringIO()
         writer = csv.writer(output, delimiter=';')
         
@@ -158,8 +157,8 @@ def download_csv_report_collettivi(id_testcollettivo : int, token: str = Depends
             "Errori"
         ])
         
-        for test in tests:
-            username = users.get(test.utente_id).username if test.utente_id in users else "Unknown"
+        for test, utente in tests:
+            username = utente if utente else "Unknown"
             writer.writerow([
                 test.id_test,
                 username,

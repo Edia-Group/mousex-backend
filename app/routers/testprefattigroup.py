@@ -16,7 +16,7 @@ from app.models.domanda import Domanda
 from app.models.variante import Variante
 from sqlalchemy import select
 from app.schemas.domande import DomandaRisposta, DomandaOptions, DomandaRispostaPrewiew
-
+import pytz
 testprefattigroup_router = APIRouter(
     prefix="/testprefattigroup",
     tags=["TestPrefattiGroup"], 
@@ -39,7 +39,7 @@ def read_tests_group(nome_testgroup_prefatto : str, token: str = Depends(oauth2_
             tipo = 'prefatto',
             utente_id = user.id,
             testprefattigroup_id = new_testprefattogroup.id,
-            data_ora_inserimento = datetime.now() + timedelta(hours=1),
+            data_ora_inserimento = datetime.now(pytz.timezone('Europe/Rome')),
             visibile = False,
         ),
         db
@@ -70,7 +70,7 @@ def read_tests_group(id_testgroup_prefatto : str, token: str = Depends(oauth2_sc
             tipo=f"prefatto {str(test_prefatto.id)} triggered",
             utente_id=user.id,
             testprefattigroup_id=test_prefatto.id,
-            data_ora_inserimento=datetime.now() + timedelta(hours=1),
+            data_ora_inserimento=datetime.now(pytz.timezone('Europe/Rome')),
         )
         for user in existing_users
     ]
