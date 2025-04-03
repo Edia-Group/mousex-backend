@@ -6,7 +6,7 @@ from app.core.database import get_db
 from app.utils.auth import get_username_from_token
 from app.schemas.test import TestResponse
 from app.utils.user import get_random_domande_variante
-from app.schemas.domande import DomandaRisposta, DomandaOptions
+from app.schemas.domande import DomandaRisposta, DomandaOptions, DomandaRispostaPrewiew
 from app.schemas.test import TestCreateRequest, FormattedTest
 from app.models.domanda import Domanda
 from app.models.variante import Variante
@@ -327,7 +327,13 @@ def toggle_test_collettivo(id_testcollettivo : str, token: str = Depends(oauth2_
 
     user = get_username_from_token(token, db)
     to_toggle = db.query(TestsGroup).filter(TestsGroup.id == id_testcollettivo).first()
-
+    testgroup_collettivi = db.query(TestsGroup).filter(TestsGroup.tipo != 'standard')
+    testgroup_collettivi = [test for test in testgroup_collettivi if
+                         f"collettivo {str(id_testcollettivo)}" in test.tipo]
+    for test in testgroup_collettivi:
+        test.visibile = not test.visibile
+        db.commit()
+        db.refresh(test)
     if not to_toggle:
         raise HTTPException(status_code=404, detail="Test not found")
     to_toggle.visibile = not to_toggle.visibile
@@ -335,3 +341,46 @@ def toggle_test_collettivo(id_testcollettivo : str, token: str = Depends(oauth2_
     db.refresh(to_toggle)
 
     return to_toggle
+
+@test_router.get("/test_collettivo/{id_testcollettivo}/preview", response_model= DomandaRispostaPrewiew)
+def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+    user = get_username_from_token(token, db)
+    testgrouop_associated = db.query(TestsGroup).filter(TestsGroup.utente_id == user.id, TestsGroup.id==id_testcollettivo).first()
+    if not testgrouop_associated:
+        raise HTTPException(status_code=404, detail="TestGroup not found")    
+    tests_to_display = db.query(Test).filter(Test.id_test == int(testgrouop_associated.tipo.split(' ')[1])).first()
+
+    if not tests_to_display:
+        raise HTTPException(status_code=404, detail="No test to display")
+
+    domande_list = (
+        db.query(Domanda)
+        .join(TestAdmin, Domanda.id_domanda == TestAdmin.id_domanda)
+        .filter(TestAdmin.id_test == tests_to_display.id_test)
+        .all()
+    )
+
+    varianti = db.execute(
+        select(Domanda, Variante)
+        .join(Variante, Domanda.id_domanda == Variante.domanda_id)
+    ).all()
+
+    grouped_varianti = {}
+    for domanda, variante in varianti:
+        if domanda.id_domanda not in grouped_varianti:
+            grouped_varianti[domanda.id_domanda] = {"domanda": domanda, "varianti": []}
+        grouped_varianti[domanda.id_domanda]["varianti"].append(variante.corpo)
+    domande_returned = []
+    print(grouped_varianti)
+    domande_list_sorted = sorted(domande_list, key=lambda domanda: (domanda.numero_pagina, domanda.posizione))
+    for domanda in domande_list_sorted:
+        domande_returned.append(
+            DomandaOptions(
+                domanda=domanda,
+                varianti=grouped_varianti[domanda.id_domanda]["varianti"],
+        ))
+    testgrouop_associated.decrement(db)
+    return DomandaRispostaPrewiew(
+        domande=domande_returned,
+    )

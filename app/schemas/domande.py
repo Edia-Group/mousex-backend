@@ -63,6 +63,7 @@ class DomandaRisposta(BaseModel):
     test_id : int
     data_ora_inizio: datetime
 
-
+class DomandaRispostaPrewiew(BaseModel):
+    domande: List[DomandaOptions]
 
 
