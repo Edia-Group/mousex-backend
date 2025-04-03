@@ -10,7 +10,7 @@ class Test(Base):
     id_test = Column(Integer, primary_key=True, index=True, autoincrement=True)
     data_ora_inizio = Column(DateTime(), nullable=True)
     tipo = Column(String(50), nullable=False, default = 'Normale')
-    in_sequenza = Column(Boolean, nullable=True, default=False)
+    generated = Column(Boolean, nullable=True, default=False)
     nr_gruppo = Column(Integer, nullable=False, default = 0)
     secondi_ritardo = Column(Integer, nullable=False, default=5)
     utente_id =  Column(Integer, ForeignKey("users.id"), nullable=False)
@@ -36,6 +36,15 @@ class Test(Base):
     @staticmethod
     def create(id : int, secondi_ritardo : int , tipo: str, db : Session, contatore = None, testgroup_id = None):
         new_test = Test(utente_id = id, data_ora_inizio = datetime.now() + timedelta(seconds=secondi_ritardo) + timedelta(hours=2)
+                        , tipo = tipo, contatore = contatore, testgroup_id = testgroup_id)
+        db.add(new_test)
+        db.commit()
+        db.refresh(new_test)
+        return new_test
+    
+    @staticmethod
+    def create_collettivo(id : int, secondi_ritardo : int , tipo: str, db : Session, data_ora_inizo: datetime, contatore = None, testgroup_id = None):
+        new_test = Test(utente_id = id, data_ora_inizio = data_ora_inizo
                         , tipo = tipo, contatore = contatore, testgroup_id = testgroup_id)
         db.add(new_test)
         db.commit()

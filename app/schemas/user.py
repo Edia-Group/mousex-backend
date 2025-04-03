@@ -37,7 +37,7 @@ class TestSchema(BaseModel):
     idTest: int
     dataOraInizio: datetime | None
     tipo: str
-    inSequenza: bool | None
+    generated: Optional[bool]
     nrGruppo: int
     secondiRitardo: int
     utente_id: int

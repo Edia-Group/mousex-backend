@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from app.models.test import Test
 from app.core.security import oauth2_scheme
 from sqlalchemy.orm import Session
@@ -7,7 +7,7 @@ from app.utils.auth import get_username_from_token
 from app.schemas.test import TestResponse
 from app.utils.user import get_random_domande_variante
 from app.schemas.domande import DomandaRisposta, DomandaOptions
-from app.schemas.test import TestCreateRequest, FormattedTest, FormattedTestResponse
+from app.schemas.test import TestCreateRequest, FormattedTest
 from app.models.domanda import Domanda
 from app.models.variante import Variante
 from app.models.testAdmin import TestAdmin
@@ -20,6 +20,7 @@ from typing import List
 from datetime import datetime, timedelta
 from app.schemas.test import TestBase
 from app.models.testgroup import TestsGroup
+from app.schemas.testgroup import TestsGroupWithUser
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -163,11 +164,13 @@ async def create_domande(formattedTest: FormattedTest, token: str = Depends(oaut
         db.bulk_save_objects(varianti_to_insert)
         db.commit()
         if formattedTest.data_ora_inizio:
-            new_test = Test.create(
+            print(formattedTest.data_ora_inizio)
+            new_test = Test.create_collettivo(
                 id=user.id,
                 secondi_ritardo=5,
                 tipo= 'collettivo',
                 db=db,
+                data_ora_inizo=formattedTest.data_ora_inizio,
             )
         else:
             id_testgroupprefatto = formattedTest.id_testgroup_prefatto
@@ -206,18 +209,21 @@ async def create_domande(formattedTest: FormattedTest, token: str = Depends(oaut
 def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
-
-    tests_to_display = db.query(Test).filter(Test.id_test == id_testcollettivo).first()
+    testgrouop_associated = db.query(TestsGroup).filter(TestsGroup.utente_id == user.id, TestsGroup.id==id_testcollettivo).first()
+    if not testgrouop_associated:
+        raise HTTPException(status_code=404, detail="TestGroup not found")    
+    tests_to_display = db.query(Test).filter(Test.id_test == int(testgrouop_associated.tipo.split(' ')[1])).first()
 
     if not tests_to_display:
         raise HTTPException(status_code=404, detail="No test to display")
     
-    created_test = Test.create(
+    created_test = Test.create_collettivo(
         id=user.id, 
         secondi_ritardo=tests_to_display.secondi_ritardo,
         tipo="collettivo" + " " + str(tests_to_display.id_test),
         db=db,
         contatore=tests_to_display.contatore,
+        data_ora_inizo=tests_to_display.data_ora_inizio,
     )
 
     domande_list = (
@@ -246,7 +252,7 @@ def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme
                 domanda=domanda,
                 varianti=grouped_varianti[domanda.id_domanda]["varianti"],
         ))
-
+    testgrouop_associated.decrement(db)
     return DomandaRisposta(
         domande=domande_returned,
         test_id=created_test.id_test,
@@ -257,46 +263,75 @@ def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme
 def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
-    tests_collettivi = db.query(Test).filter(Test.tipo == 'collettivo').all()
+    tests_collettivi = db.query(Test).filter(Test.tipo == 'collettivo',
+                                             Test.is_active == True).all()
 
     return tests_collettivi
 
-@test_router.get("/test_collettivi/me", response_model= List[TestBase])
+@test_router.get("/test_collettivi/me", response_model= List[TestsGroupWithUser])
 def read_tests_group(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
-    tests_collettivi = db.query(Test).filter(Test.tipo != 'collettivo',
-                                             Test.utente_id == user.id).all()
-    tests_collettivi = [test for test in tests_collettivi if test.is_active
-                        and test.data_ora_fine is None
+    tests_collettivi = db.query(TestsGroup).filter(TestsGroup.tipo != 'collettivo',
+                                             TestsGroup.utente_id == user.id,
+                                             
+                                             TestsGroup.nr_test > 0).all()
+    tests_collettivi = [test for test in tests_collettivi if
+                        test.nr_test > 0
                         and "collettivo " in test.tipo]
     return tests_collettivi
 
-
-
-@test_router.get("/test_collettivo/trigger/{id_testcollettivo}", response_model= DomandaRisposta)
+@test_router.get("/test_collettivo/trigger/{id_testcollettivo}")
 def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
+    tests_to_display = db.query(Test).filter(Test.id_test == id_testcollettivo).first()
+    if not tests_to_display:
+        raise HTTPException(status_code=404, detail="No test to display")
     Users = db.query(User).all()
     for user in Users:
-        Test.create(
-            id=user.id, 
+        TestsGroup.create(
+            TestsGroup(
+            utente_id=user.id, 
             secondi_ritardo=5,
             tipo= 'collettivo' + " " + str(id_testcollettivo),
-            db=db,
-            contatore=0,
+            nr_test=1,
+            data_ora_inserimento = datetime.now() + timedelta(hours=2),
+            data_ora_inizio = tests_to_display.data_ora_inizio,
+            visibile = False,
+            ),
+            db=db
         )
+
+    tests_to_display.generated = True
+    db.commit()
+    db.refresh(tests_to_display)
+
     return {"message": "Test created for all users."}
 
-@test_router.delete("/test_collettivo/delete/{id_testcollettivo}/", response_model= DomandaRisposta)
+@test_router.delete("/test_collettivo/delete/{id_testcollettivo}", response_model= TestBase)
 def delete_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
     user = get_username_from_token(token, db)
-    to_delete = db.query(Test).filter(Test.utente_id == user.id, Test.id_test == id_testcollettivo).first()
+    to_delete = db.query(Test).filter(Test.id_test == id_testcollettivo).first()
     if not to_delete:
         raise HTTPException(status_code=404, detail="Test not found")
-    db.delete(to_delete)
+    to_delete.is_active = False
     db.commit()
+    db.refresh(to_delete)
 
     return to_delete
+
+@test_router.get("/test_collettivi/{id_testcollettivo}/toggle", response_model= TestBase)
+def toggle_test_collettivo(id_testcollettivo : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+    user = get_username_from_token(token, db)
+    to_toggle = db.query(TestsGroup).filter(TestsGroup.id == id_testcollettivo).first()
+
+    if not to_toggle:
+        raise HTTPException(status_code=404, detail="Test not found")
+    to_toggle.visibile = not to_toggle.visibile
+    db.commit()
+    db.refresh(to_toggle)
+
+    return to_toggle

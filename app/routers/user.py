@@ -57,7 +57,7 @@ async def get_last_tests(token: str = Depends(oauth2_scheme), db: Session = Depe
         idTest=test.id_test,
         dataOraInizio=test.data_ora_inizio,
         tipo=test.tipo,
-        inSequenza=test.in_sequenza,
+        generated =test.generated,
         nrGruppo=test.nr_gruppo,
         secondiRitardo=test.secondi_ritardo,
         utente_id=test.utente_id,

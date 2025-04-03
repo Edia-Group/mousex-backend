@@ -6,7 +6,7 @@ class TestBase(BaseModel):
     id_test: int
     data_ora_inizio: Optional[datetime] = None
     tipo: str = 'Normale'
-    in_sequenza: bool = False
+    generated: Optional[bool]
     nr_gruppo: int = 0
     secondi_ritardo: int = 5
     utente_id: int
@@ -16,7 +16,8 @@ class TestBase(BaseModel):
     malus_f5: bool = False
     numero_errori: int = 0
     tempo_impiegato: float 
-    is_validate: bool 
+    is_validate: Optional[bool] 
+    is_active: Optional[bool]
 
     class Config:
         from_attributes = True
