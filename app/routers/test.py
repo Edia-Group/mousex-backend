@@ -342,14 +342,11 @@ def toggle_test_collettivo(id_testcollettivo : str, token: str = Depends(oauth2_
 
     return to_toggle
 
-@test_router.get("/test_collettivo/{id_testcollettivo}/preview", response_model= DomandaRispostaPrewiew)
-def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+@test_router.get("/test_collettivo/{id_test}/preview", response_model= DomandaRispostaPrewiew)
+def read_tests_group(id_test : str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
-    user = get_username_from_token(token, db)
-    testgrouop_associated = db.query(TestsGroup).filter(TestsGroup.utente_id == user.id, TestsGroup.id==id_testcollettivo).first()
-    if not testgrouop_associated:
-        raise HTTPException(status_code=404, detail="TestGroup not found")    
-    tests_to_display = db.query(Test).filter(Test.id_test == int(testgrouop_associated.tipo.split(' ')[1])).first()
+
+    tests_to_display = db.query(Test).filter(Test.id_test == id_test).first()
 
     if not tests_to_display:
         raise HTTPException(status_code=404, detail="No test to display")
@@ -380,7 +377,6 @@ def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme
                 domanda=domanda,
                 varianti=grouped_varianti[domanda.id_domanda]["varianti"],
         ))
-    testgrouop_associated.decrement(db)
     return DomandaRispostaPrewiew(
         domande=domande_returned,
     )
