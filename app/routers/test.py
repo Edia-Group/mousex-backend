@@ -102,7 +102,6 @@ def read_tests_group(idTest: int, id_testprefatto: int,token: str = Depends(oaut
     user = get_username_from_token(token, db)
 
     prefatto_associated = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_testprefatto).first()
-    testgroup_associated = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testprefatto).first()
     if not prefatto_associated:
         raise HTTPException(status_code=404, detail="TestGroup not found")
     testgroup_associated = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testprefatto).first()
@@ -110,7 +109,7 @@ def read_tests_group(idTest: int, id_testprefatto: int,token: str = Depends(oaut
         raise HTTPException(status_code=404, detail="TestGroup not found")
     
     all_tests_associated = db.query(Test).filter(Test.testgroup_id == testgroup_associated.id).all()
-    test_delete =  db.query(Test).filter(Test.id_test == idTest, Test.utente_id == user.id).first()
+    test_delete =  db.query(Test).filter(Test.id_test == idTest).first()
     if not test_delete:
         raise HTTPException(status_code=404, detail="Test not found")
     
@@ -131,7 +130,7 @@ def read_tests_group(idTest: int, id_testprefatto: int,token: str = Depends(oaut
     testgroup_associated.nr_test -= 1
     db.commit()
     db.refresh(testgroup_associated)
-    
+
     return test_delete
 
 @test_router.post("/admin-test")
