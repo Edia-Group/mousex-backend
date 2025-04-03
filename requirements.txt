@@ -8,3 +8,4 @@ uvicorn
 psycopg2-binary
 python-multipart
 pydantic-settings
+pytz
