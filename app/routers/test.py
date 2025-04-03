@@ -102,6 +102,7 @@ def read_tests_group(idTest: int, id_testprefatto: int,token: str = Depends(oaut
     user = get_username_from_token(token, db)
 
     prefatto_associated = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_testprefatto).first()
+    testgroup_associated = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testprefatto).first()
     if not prefatto_associated:
         raise HTTPException(status_code=404, detail="TestGroup not found")
     testgroup_associated = db.query(TestsGroup).filter(TestsGroup.testprefattigroup_id == id_testprefatto).first()
@@ -127,6 +128,10 @@ def read_tests_group(idTest: int, id_testprefatto: int,token: str = Depends(oaut
 
     db.delete(test_delete)
     db.commit()
+    testgroup_associated.nr_test -= 1
+    db.commit()
+    db.refresh(testgroup_associated)
+    
     return test_delete
 
 @test_router.post("/admin-test")
