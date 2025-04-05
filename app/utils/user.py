@@ -3,7 +3,7 @@ from sqlalchemy import func as sqlfunc
 import random
 from app.models.domanda import Domanda
 
-def get_random_domande_variante(db: Session):
+def get_random_domande_variante(db: Session) -> list[Domanda]:
     domande = (
         db.query(Domanda)
         .order_by(sqlfunc.random())

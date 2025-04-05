@@ -59,9 +59,18 @@ def create_test(
     )
 
     domande_with_options = []
+    domande_with_varianti = db.query(Variante).all()
+    ids_domande = [domanda.domanda_id for domanda in domande_with_varianti]
     domande = get_random_domande_variante(db)
     for domanda in domande:
-        opzioni = generate_distinct_variations(domanda.risposta_esatta)
+        if domanda.id_domanda in ids_domande:
+            opzioni = sorted(
+                [(variante.corpo, variante.posizione) for variante in domande_with_varianti if variante.domanda_id == domanda.id_domanda],
+                key=lambda variante: variante[1]
+            )
+            opzioni = [variante[0] for variante in opzioni]
+        else:
+            opzioni = generate_distinct_variations(domanda.risposta_esatta)
         domande_with_options.append(
             DomandaOptions(
                 domanda=domanda,

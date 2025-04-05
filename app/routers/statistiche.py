@@ -55,7 +55,7 @@ def create_test(
     token: str = Depends(oauth2_scheme), 
     db: Session = Depends(get_db)
 ):        
-    users = db.query(User).filter(User.is_superuser == False).all()
+    users = db.query(User).all()
     tests = db.query(Test).all()
     return [TestBaseStats(Test=test, utente=user) for user in users for test in tests if test.utente_id == user.id]
 
@@ -92,7 +92,7 @@ def get_all_statistiche(
 @statistiche_router.get("/csv_riepilogo")
 def download_csv_report(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
-        non_superuser_users = db.query(User).filter(User.is_superuser == False).all()
+        non_superuser_users = db.query(User).all()
         non_superuser_ids = {user.id for user in non_superuser_users}
         
         tests = db.query(Test).filter(Test.utente_id.in_(non_superuser_ids)).all()
@@ -188,7 +188,7 @@ def download_csv_report_collettivi(id_testcollettivo : int, token: str = Depends
 def download_csv_report_prefatti(id_testprefatto:str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
         test_prefatto = db.query(TestPrefattiGroup).filter(TestPrefattiGroup.id == id_testprefatto).first()
-        non_superuser_users = db.query(User).filter(User.is_superuser == False).all()
+        non_superuser_users = db.query(User).all()
         non_superuser_ids = {user.id for user in non_superuser_users}
         
         tests = db.query(Test).filter(
