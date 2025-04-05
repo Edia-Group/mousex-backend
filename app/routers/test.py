@@ -254,7 +254,7 @@ def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme
     
     created_test = Test.create_collettivo(
         id=user.id, 
-        secondi_ritardo=tests_to_display.secondi_ritardo,
+        secondi_ritardo=0,
         tipo="collettivo" + " " + str(tests_to_display.id_test),
         db=db,
         contatore=tests_to_display.contatore,
