@@ -3,7 +3,7 @@ from sqlalchemy import func as sqlfunc
 import random
 from app.models.domanda import Domanda
 
-def get_random_domande_variante(db: Session):
+def get_random_domande_variante(db: Session) -> list[Domanda]:
     domande = (
         db.query(Domanda)
         .order_by(sqlfunc.random())
@@ -13,7 +13,7 @@ def get_random_domande_variante(db: Session):
     return get_unique_domande(domande[:55])
 
 def get_unique_domande(domande : list[Domanda]):
-    rand_limit_domande = random.randint(12,15)
+    rand_limit_domande = random.randint(6,11)
     domande_body = []
     domande_unique = []
     for domanda in domande:

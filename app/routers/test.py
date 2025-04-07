@@ -59,9 +59,18 @@ def create_test(
     )
 
     domande_with_options = []
+    domande_with_varianti = db.query(Variante).all()
+    ids_domande = [domanda.domanda_id for domanda in domande_with_varianti]
     domande = get_random_domande_variante(db)
     for domanda in domande:
-        opzioni = generate_distinct_variations(domanda.risposta_esatta)
+        if domanda.id_domanda in ids_domande:
+            opzioni = sorted(
+                [(variante.corpo, variante.posizione) for variante in domande_with_varianti if variante.domanda_id == domanda.id_domanda],
+                key=lambda variante: variante[1]
+            )
+            opzioni = [variante[0] for variante in opzioni]
+        else:
+            opzioni = generate_distinct_variations(domanda.risposta_esatta)
         domande_with_options.append(
             DomandaOptions(
                 domanda=domanda,
@@ -254,7 +263,7 @@ def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme
     
     created_test = Test.create_collettivo(
         id=user.id, 
-        secondi_ritardo=tests_to_display.secondi_ritardo,
+        secondi_ritardo=0,
         tipo="collettivo" + " " + str(tests_to_display.id_test),
         db=db,
         contatore=tests_to_display.contatore,
