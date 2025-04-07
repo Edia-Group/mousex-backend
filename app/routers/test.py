@@ -217,6 +217,7 @@ async def create_domande(formattedTest: FormattedTest, token: str = Depends(oaut
                 tipo= 'collettivo',
                 db=db,
                 data_ora_inizo=formattedTest.data_ora_inizio - timedelta(hours=2),
+                show_riepilogo=formattedTest.show_riepilogo,
             )
         else:
             id_testgroupprefatto = formattedTest.id_testgroup_prefatto
@@ -227,7 +228,8 @@ async def create_domande(formattedTest: FormattedTest, token: str = Depends(oaut
                 tipo= 'prefatto',
                 db=db,
                 contatore = testgroup_associated.nr_test,
-                testgroup_id = testgroup_associated.id
+                testgroup_id = testgroup_associated.id,
+                show_riepilogo = formattedTest.show_riepilogo,
             )
             testgroup_associated.nr_test += 1
             db.commit()

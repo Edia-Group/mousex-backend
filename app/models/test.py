@@ -23,7 +23,7 @@ class Test(Base):
     is_active = Column(Boolean, nullable=True, default=True)
     numero_errori = Column(Integer, nullable=False, default=0)
     is_validate = Column(Boolean, nullable=True, default=False)
-
+    show_riepilogo = Column(Boolean, nullable=True, default=False)
 
     def validate(self, db: Session):
         self.is_validate = True
@@ -36,18 +36,18 @@ class Test(Base):
         return self
     
     @staticmethod
-    def create(id : int, secondi_ritardo : int , tipo: str, db : Session, contatore = None, testgroup_id = None):
+    def create(id : int, secondi_ritardo : int , tipo: str, db : Session, contatore = None, testgroup_id = None, show_riepilogo = False):
         new_test = Test(utente_id = id, data_ora_inizio = datetime.now(pytz.timezone('Europe/Rome')) + timedelta(seconds=secondi_ritardo)
-                        , tipo = tipo, contatore = contatore, testgroup_id = testgroup_id)
+                        , tipo = tipo, contatore = contatore, testgroup_id = testgroup_id, show_riepilogo = show_riepilogo)
         db.add(new_test)
         db.commit()
         db.refresh(new_test)
         return new_test
     
     @staticmethod
-    def create_collettivo(id : int, secondi_ritardo : int , tipo: str, db : Session, data_ora_inizo: datetime, contatore = None, testgroup_id = None):
+    def create_collettivo(id : int, secondi_ritardo : int , tipo: str, db : Session, data_ora_inizo: datetime, contatore = None, testgroup_id = None, show_riepilogo = False):
         new_test = Test(utente_id = id, data_ora_inizio = data_ora_inizo
-                        , tipo = tipo, contatore = contatore, testgroup_id = testgroup_id)
+                        , tipo = tipo, contatore = contatore, testgroup_id = testgroup_id, show_riepilogo = show_riepilogo)
         db.add(new_test)
         db.commit()
         db.refresh(new_test)

@@ -48,6 +48,7 @@ class FormattedTest(BaseModel):
     formattedTest: Dict[str, Pagina]
     data_ora_inizio: Optional[datetime] = None
     id_testgroup_prefatto: Optional[int] = None
+    show_riepilogo: Optional[bool] = None
 
 class FormattedTestResponse(BaseModel):
     formattedTest: Dict[str, Pagina]

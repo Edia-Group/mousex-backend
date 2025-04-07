@@ -62,6 +62,7 @@ class DomandaRisposta(BaseModel):
     domande: List[DomandaOptions]
     test_id : int
     data_ora_inizio: datetime
+    show_riepilogo: Optional[bool] = False
 
 class DomandaRispostaPrewiew(BaseModel):
     domande: List[DomandaOptions]
