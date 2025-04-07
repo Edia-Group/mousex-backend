@@ -178,6 +178,7 @@ def read_tests_group(id_testgroup : str, token: str = Depends(oauth2_scheme), db
         domande=domande_returned,
         test_id=created_test.id_test,
         data_ora_inizio=created_test.data_ora_inizio,
+        show_riepilogo=tests_to_display.show_riepilogo,
     )
 
 @testprefattigroup_router.get("/test/{id_testgroup}/preview", response_model= DomandaRispostaPrewiew)

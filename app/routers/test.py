@@ -303,6 +303,7 @@ def read_tests_group(id_testcollettivo : str, token: str = Depends(oauth2_scheme
         domande=domande_returned,
         test_id=created_test.id_test,
         data_ora_inizio=tests_to_display.data_ora_inizio,
+        show_riepilogo=tests_to_display.show_riepilogo,
     )
 
 @test_router.get("/test_collettivi/all", response_model= List[TestBase])
