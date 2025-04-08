@@ -58,7 +58,7 @@ def create_test(
 ):        
     user = get_username_from_token(token, db)
 
-    return db.query(DomandaModel).all()
+    return db.query(DomandaModel).filter(DomandaModel.attivo == True).all()
 
 @domande_router.put("/modify/{id_domanda}", response_model=DomandaResponse)
 def modify_domanda(

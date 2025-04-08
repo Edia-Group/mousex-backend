@@ -86,7 +86,7 @@ def create_test(
 def read_tests_group(idTest: int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     user = get_username_from_token(token, db)
 
-    return db.query(Test).filter(Test.idTest == idTest, Test.utente_id == user.id).first()
+    return db.query(Test).filter(Test.id_test == idTest, Test.utente_id == user.id).first()
 
 @test_router.delete("/delete/{idTest}", response_model=TestResponse)
 def read_tests_group(idTest: int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):

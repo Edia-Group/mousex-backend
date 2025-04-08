@@ -71,13 +71,21 @@ def get_all_statistiche(
     return [Statistiche_Page(statistiche=stats, test_incompleti=test_incompleti)]
     
 
-@statistiche_router.get("/increment/{char_type}", response_model =StatisticheBase)
+@statistiche_router.get("/increment/{id_test}/{char_type}", response_model =StatisticheBase)
 def get_all_statistiche(
+    id_test: int,
     char_type: str,
     token: str = Depends(oauth2_scheme), 
     db: Session = Depends(get_db)
 ):        
     user = get_username_from_token(token, db)
+    test_to_increment = db.query(Test).filter(Test.id_test == id_test).first()
+    if not test_to_increment:
+        raise HTTPException(status_code=404, detail="Test not found")
+    test_to_increment.numero_errori += 1
+    db.commit()
+    db.refresh(test_to_increment)
+    
     stats_to_incrememt = db.query(Statistiche).filter(Statistiche.utente_id == user.id, Statistiche.tipo_domanda == char_type).first()
     stats_to_incrememt.nr_errori += 1
     db.commit()

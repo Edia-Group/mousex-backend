@@ -6,6 +6,7 @@ from app.models.domanda import Domanda
 def get_random_domande_variante(db: Session) -> list[Domanda]:
     domande = (
         db.query(Domanda)
+        .filter(Domanda.attivo == True)
         .order_by(sqlfunc.random())
         .all()
     )
