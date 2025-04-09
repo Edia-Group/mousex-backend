@@ -2,12 +2,14 @@ from fastapi import APIRouter, Depends
 from app.core.security import oauth2_scheme
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from sqlalchemy import func, extract, desc
+from sqlalchemy import func, desc
 from app.utils.auth import get_username_from_token
 from datetime import datetime, timedelta
 from app.schemas.user import UserStats, UserTests, TestSchema
-from app.models.statistiche import Statistiche
+from app.schemas.user import User as UserRead
+from typing import List
 from app.models.test import Test
+from app.models.user import User
 
 users_router = APIRouter(
     prefix="/users", 
@@ -69,3 +71,22 @@ async def get_last_tests(token: str = Depends(oauth2_scheme), db: Session = Depe
     ) for test in last_tests]
 
     return UserTests(username=user.username, tests=test_schemas[::-1])
+
+@users_router.get("/all_users", response_model=List[UserRead])
+async def read_users_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    validation =  get_username_from_token(token, db)
+    all_users = db.query(User).all()    
+
+    return all_users
+
+@users_router.get("/toggle/{user_id}", response_model=UserRead)
+async def read_users_me(user_id : int,  token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    validation =  get_username_from_token(token, db)
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        return {"message": "User not found"}
+    user.is_active = not user.is_active
+    db.commit()
+    db.refresh(user)
+
+    return user

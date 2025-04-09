@@ -55,7 +55,7 @@ def create_test(
     token: str = Depends(oauth2_scheme), 
     db: Session = Depends(get_db)
 ):        
-    users = db.query(User).all()
+    users = db.query(User).filter(User.is_active == True).all()
     tests = db.query(Test).all()
     return [TestBaseStats(Test=test, utente=user) for user in users for test in tests if test.utente_id == user.id]
 
